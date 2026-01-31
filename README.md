@@ -120,7 +120,7 @@ Our ToDoApp provides a **flexible task management application** with features li
 |--------------|-------|
 | Features     | 6     |
 | Requirements | 24    |
-| Tests        | 18    |
+| Tests        | TBD    |
 
 ---
 
