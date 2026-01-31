@@ -97,13 +97,12 @@ Our ToDoApp provides a **flexible task management application** with features li
 
 ┌───────────────────────────┐      ┌───────────────────────────┐      ┌───────────────────────────┐
 │         Frontend          │      │        Backend API        │      │         Database          │
-│   (React.js / Vue.js)     │      │        (Node.js)          │      │        (MongoDB)          │
+│   (React.js)              │      │        (Node.js)          │      │        (MongoDB)          │
 │                           │      │                           │      │                           │
 │ - Dashboard Display       │─────▶│ - Task Management         │─────▶│ - Users                  │
-│ - Modular Task Blocks     │      │ - Task Status & Priority  │      │ - Tasks                   │
-│ - Calendar View           │      │ - Points System           │      │ - Points & Levels         │
-│ - Gamification UI         │      │ - Theme Management        │      │ - Themes                  │
-│                           │      │                           │      │                           │
+│ - Modular Task Blocks     │      │ - Task Status & Priority  │      │ - Tasks                  │
+│ - Calendar View           │      │ - Points System           │      │ - Points & Levels        │
+│ - Gamification UI         │      │ - Theme Management        │      │ - Themes                 │
 └───────────────────────────┘      └───────────────────────────┘      └───────────────────────────┘
 
 
