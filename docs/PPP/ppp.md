@@ -33,6 +33,14 @@ Many users struggle to manage their tasks, projects, and deadlines efficiently. 
 - Lack of motivation or feedback to complete tasks on time  
 ---
 
+# Team-Rules
+1. **Clear and consistent communication** is essential for team success.  
+2. The **team leader will update the team project page weekly**, and **each team member is responsible for updating their individual progress page weekly**.   
+3. **Each team member will work on their own Git branch**. Once a feature is complete, the member will **open a pull request**, which will be **tested and reviewed by the team leader** before merging.  
+4. **All team members are expected to document their work clearly**, including meaningful commit messages and brief descriptions of changes, to ensure transparency and smooth collaboration.
+
+---
+
 ## Features & Requirements
 
 ### Key Features (6 Total)
@@ -103,10 +111,10 @@ Many users struggle to manage their tasks, projects, and deadlines efficiently. 
 ## Product Development Roadmap
 
 ### Sprint 1 Deliverables
-1. Build the **Dashboard with Modular Task Blocks**  
-   - Create the main dashboard layout  
-   - Display task title, priority, and status  
-   - Implement expand/collapse behavior  
+1. Create the **Calendar View**  
+   - Monthly and weekly task views  
+   - Tasks linked to due dates  
+   - Click-to-view detailed task information  
 
 ---
 
@@ -122,11 +130,10 @@ Many users struggle to manage their tasks, projects, and deadlines efficiently. 
 ---
 
 ### Sprint 2 Deliverables
-4. Create the **Calendar View**  
-   - Monthly and weekly task views  
-   - Tasks linked to due dates  
-   - Click-to-view detailed task information  
-
+4. Build the **Dashboard with Modular Task Blocks**  
+   - Create the main dashboard layout  
+   - Display task title, priority, and status  
+   - Implement expand/collapse behavior  
 ---
 
 5. Add **Customizable UI Themes**  
@@ -138,14 +145,6 @@ Many users struggle to manage their tasks, projects, and deadlines efficiently. 
    - Points for task completion  
    - Bonus points for early completion  
    - User levels and progress display  
-
----
-
-# Team-Rules
-1. **Clear and consistent communication** is essential for team success.  
-2. The **team leader will update the team project page weekly**, and **each team member is responsible for updating their individual progress page weekly**.   
-3. **Each team member will work on their own Git branch**. Once a feature is complete, the member will **open a pull request**, which will be **tested and reviewed by the team leader** before merging.  
-4. **All team members are expected to document their work clearly**, including meaningful commit messages and brief descriptions of changes, to ensure transparency and smooth collaboration.
 
 ---
 
