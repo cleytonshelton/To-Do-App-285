@@ -22,8 +22,6 @@ paginate: true
 
 ## Problem Domain
 
-### Web-Based To-Do List Application
-
 **Problem Statement:**
 Many users struggle to manage their tasks, projects, and deadlines efficiently. Existing task management tools are either too generic, overly complex, or fail to provide meaningful ways to organize and track progress. Common challenges include:  
 
@@ -107,8 +105,6 @@ Many users struggle to manage their tasks, projects, and deadlines efficiently. 
 ---
 
 # Development Roadmap
-
-## Product Development Roadmap
 
 ### Sprint 1 Deliverables
 1. Create the **Calendar View**  
