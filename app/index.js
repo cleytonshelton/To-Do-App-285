@@ -1,125 +1,73 @@
+/**
+ * Main Server File - Todoapp with ORDB
+ * 
+ * This server demonstrates the Object-Relational Database Bridge (ORDB) pattern,
+ * which allows seamless switching between different database systems (MongoDB, SQLite)
+ * without changing application code.
+ * 
+ * To switch databases, simply set the DB_TYPE environment variable:
+ *   - DB_TYPE=mongodb npm start  (uses MongoDB)
+ *   - DB_TYPE=sqlite npm start   (uses SQLite - default)
+ */
+
 import express from 'express';
 import bodyParser from 'body-parser';
 import methodOverride from 'method-override';
 
-import { getDB, getPostsCollection, getCounterCollection } from './util/db.js';
-import { runListGet, runAddPost } from './util/util.js'
+// Import routes
+import { createApiRouter } from './routes/api.js';
+import { createRouter } from './routes/router.js';
 
-const db = await getDB();
-const posts = getPostsCollection();
-const counter = getCounterCollection();
+// Import database utilities
+import { db, initializeDatabase, closeDatabase } from './util/db.js';
 
+// ========== App Configuration ==========
 const app = express();
+const PORT = process.env.PORT || 5500;
 
-app.use(bodyParser.urlencoded({ extended: true }))
-app.use(express.urlencoded({ extended: true }))
-app.use('/public', express.static('public'));
-app.use(methodOverride('_method'))
-
+// ========== Middleware Setup ==========
 app.set('view engine', 'ejs');
+app.set('views', 'views');
 
-app.listen(5500, function () {
-  console.log('listening on 5500')
-});
+app.use(bodyParser.urlencoded({ extended: true }));
+app.use(express.json());
+app.use(methodOverride('_method'));
+app.use('/public', express.static('public'));
 
-app.get('/', function (_, resp) {
+// ========== Routes ==========
+app.use('/api', createApiRouter(db));
+app.use('/', createRouter(db));
+
+// ========== Server Startup ==========
+
+async function startServer() {
   try {
-    resp.render('write.ejs')
-  } catch (e) {
-    console.error(e);
+    // Initialize database connection
+    await initializeDatabase();
+    
+    // Start Express server
+    app.listen(PORT, () => {
+      console.log(`Server listening on http://localhost:${PORT}`);
+    });
+  } catch (error) {
+    console.error('Failed to start server:', error);
+    process.exit(1);
   }
+}
+
+// ========== Graceful Shutdown ==========
+
+process.on('SIGINT', async () => {
+  console.log('\nShutting down gracefully...');
+  await closeDatabase();
+  process.exit(0);
 });
 
-app.post('/add', async function (req, resp) {
-  try {
-    await runAddPost(req, resp);
-    resp.redirect('/');          // single response
-  } catch (e) {
-    console.error(e);
-    resp.status(500).send('Error');
-  }
+process.on('SIGTERM', async () => {
+  console.log('\nShutting down gracefully...');
+  await closeDatabase();
+  process.exit(0);
 });
 
-app.get('/list', function (req, resp) {
-  runListGet(req, resp);
-});
-
-app.delete('/delete', async function(req, resp){
-    req.body._id = parseInt(req.body._id); // the body._id is stored in string, so change it into an int value
-    console.log(req.body._id);
-    try {
-        const posts = db.collection(POSTS)
-        const res = await posts.deleteOne(req.body); 
-
-        console.log('Delete complete')
-        resp.send('Delete complete')
-    }
-    catch (e) {
-        console.error(e);
-    } 
-});
-
-app.get('/detail/:id', async function (req, resp) {
-  try {
-    let res = await posts.findOne({ _id: parseInt(req.params.id) })
-    // req.params.id contains the value of id
-    console.log('app.get.detail: Update complete')
-    console.log({ data: res });
-    if (res != null) {
-      resp.render('detail.ejs', { data: res })
-    }
-    else {
-      console.log(error);
-      resp.status(500).send({ error: 'result is null' })
-    }
-  }
-  catch (error) {
-    console.log(error)
-    resp.status(500).send({ error: 'Error from db.collection().findOne()' })
-  }
-})
-
-app.get('/edit/:id', async function (req, resp) {
-  console.log(req.params)
-  try { 
-    let res = await posts.findOne({ _id: parseInt(req.params.id) })
-    console.log({ data: res })
-    if (res != null) {
-      resp.render('edit.ejs', { data: res })
-    }
-    else {
-      resp.status(500).send({ error: 'result is null' })
-    }
-  }
-  catch (error) {
-    console.log(error)
-    resp.status(500).send({ error: 'Error from db.collection().findOne()' })
-  }
-});
-
-app.put('/edit', async function (req, resp) {
-  try {
-    await posts.updateOne(
-      { _id: parseInt(req.body.id) },
-      { $set: { title: req.body.title, date: req.body.date } }
-    );
-
-    console.log('app.put.edit: Update complete');
-    resp.redirect('/list');    // ✅ Correct
-  } catch (e) {
-    console.error(e);
-    resp.status(500).send('Update error');
-  }
-});
-
-
-// API for JSON
-
-app.get('/listjson', async function (req, resp) {
-  try {
-    const res = await posts.find().toArray();
-    resp.send(res)
-  } catch (e) {
-    console.error(e);
-  }
-});
+// Start the server
+startServer();
