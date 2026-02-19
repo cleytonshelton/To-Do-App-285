@@ -123,3 +123,7 @@ app.get('/listjson', async function (req, resp) {
     console.error(e);
   }
 });
+
+app.get('/calendar', function (req, resp) {
+  resp.render('calendar.ejs');
+});

@@ -1,0 +1,16 @@
+.calendar-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 5px;
+}
+
+.day {
+  border: 1px solid #ccc;
+  min-height: 100px;
+  padding: 5px;
+}
+
+.task {
+  font-size: 12px;
+  color: blue;
+}
