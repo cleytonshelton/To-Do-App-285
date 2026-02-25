@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+
+  <title>Home - Todo App</title>
+  
+  <style>
+    .hero-section {
+      padding: 100px 0;
+      background: linear-gradient(135deg, #ffffff 0%, #f1f5f9 100%);
+    }
+    .feature-icon {
+      width: 48px;
+      height: 48px;
+      background: var(--status-pending-bg);
+      color: var(--primary);
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+    }
+  </style>
+</head>
+
+<body>
+  <%- include('nav.ejs') %>
+
+  <header class="hero-section border-bottom">
+    <div class="container text-center">
+      <h1 class="display-4 font-weight-bold mb-3" style="letter-spacing: -1.5px;">
+        Manage your day, <span class="text-primary">seamlessly.</span>
+      </h1>
+      <p class="lead text-muted mb-5 mx-auto" style="max-width: 600px;">
+        A high-performance Todo application built with ORDB logic for speed and flexibility. 
+        Track your progress and stay organized with ease.
+      </p>
+      <div class="d-flex justify-content-center gap-3">
+        <a href="/list" class="btn btn-modern btn-primary-modern btn-lg px-5 shadow-sm mr-3">
+          View My Tasks
+        </a>
+        <a href="/write" class="btn btn-modern btn-outline-secondary btn-lg px-5">
+          + Add Task
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <main class="container py-5">
+    <div class="row">
+      <div class="col-md-4 mb-4">
+        <div class="card custom-card h-100 border-0">
+          <div class="card-body">
+            <div class="feature-icon">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
+                <path d="m10.97 4.97-.02.022-3.473 4.425-2.093-2.094a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
+              </svg>
+            </div>
+            <h5 class="font-weight-bold">Status Tracking</h5>
+            <p class="text-muted small">Update tasks from Pending to Completed with our intuitive status management system.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4 mb-4">
+        <div class="card custom-card h-100 border-0">
+          <div class="card-body">
+            <div class="feature-icon" style="background: #dcfce7; color: #166534;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M4 11a1 1 0 1 1 2 0v1a1 1 0 1 1-2 0v-1zm6-4a1 1 0 1 1 2 0v5a1 1 0 1 1-2 0V7zM7 9a1 1 0 1 1 2 0v3a1 1 0 1 1-2 0V9z"/>
+                <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
+                <path d="M9.5 1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-3a.5.5 0 0 1-.5-.5v-1a.5.5 0 0 1 .5-.5h3zm-3-1A1.5 1.5 0 0 0 5 1.5v1A1.5 1.5 0 0 0 6.5 4h3A1.5 1.5 0 0 0 11 2.5v-1A1.5 1.5 0 0 0 9.5 0h-3z"/>
+              </svg>
+            </div>
+            <h5 class="font-weight-bold">Unified API</h5>
+            <p class="text-muted small">Powered by the ORDB interface, ensuring your data is handled efficiently across any database.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-md-4 mb-4">
+        <div class="card custom-card h-100 border-0">
+          <div class="card-body">
+            <div class="feature-icon" style="background: #fef9c3; color: #854d0e;">
+              <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16">
+                <path d="M11.5 2a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM9.05 3a2.5 2.5 0 1 1 4.9 0H16v1h-2.05a2.5 2.5 0 1 1-4.9 0H0V3h9.05zM4.5 7a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zM2.05 8a2.5 2.5 0 1 1 4.9 0H16v1H6.95a2.5 2.5 0 1 1-4.9 0H0V8h2.05zm9.45 4a1.5 1.5 0 1 0 0 3 1.5 1.5 0 0 0 0-3zm-2.45 1a2.5 2.5 0 1 1 4.9 0H16v1h-2.05a2.5 2.5 0 1 1-4.9 0H0v-1h9.05z"/>
+              </svg>
+            </div>
+            <h5 class="font-weight-bold">Modern Design</h5>
+            <p class="text-muted small">A clean, distraction-free interface focused on getting things done without the clutter.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </main>
+
+  <footer class="text-center py-4 text-muted border-top mt-5">
+    <small>&copy; 2026 Todo App - Built with Express & ORDB</small>
+  </footer>
+
+  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+</body>
+
+</html>

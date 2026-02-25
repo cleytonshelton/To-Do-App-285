@@ -2,13 +2,12 @@
 <html lang="en">
 
 <head>
-  <!-- Required meta tags -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
-  <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
-    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
   <title>List Posts - Todo App</title>
 </head>
@@ -16,50 +15,62 @@
 <body>
   <%- include('nav.ejs') %>
 
-    <h4 class="container mt-4"><strong>List Page</strong></h4>
+  <div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h4 class="mb-0"><strong>My Tasks</strong></h4>
+      <a href="/write" class="btn btn-modern btn-primary-modern">Create New</a>
+    </div>
 
-    <ul class="list-group container">
+    <ul class="list-group">
       <% for (var i=0; i < posts.length; i++){ %>
-        <li class="list-group-item">
-          <p>
-            <a href="/detail/<%= posts[i]._id %>">
-              Title : <%= posts[i].title %>
-            </a>
-          </p>
-          <p> Date : <%= posts[i].date %>
-          </p>
-          <button class="delete btn btn-danger" data-id="<%= posts[i]._id %>">Delete</button>
+        <li class="list-group-item custom-card mb-3">
+          <div class="d-flex justify-content-between align-items-center">
+            <div>
+              <div class="d-flex align-items-center mb-1">
+                <a href="/detail/<%= posts[i]._id %>" class="h5 mb-0 font-weight-bold text-decoration-none">
+                  <%= posts[i].title %>
+                </a>
+                
+                <span class="status-badge status-<%= posts[i].status || 'pending' %> ml-3">
+                  <%= posts[i].status || 'pending' %>
+                </span>
+              </div>
+              <p class="mb-0 text-muted small">
+                <i class="far fa-clock mr-1"></i> Due: <%= posts[i].date %>
+              </p>
+            </div>
+            
+            <button class="delete btn btn-outline-danger btn-modern" data-id="<%= posts[i]._id %>">
+              Delete
+            </button>
+          </div>
         </li>
-        <% } %>
+      <% } %>
     </ul>
+  </div>
 
-    <!-- Optional JavaScript -->
-    <!-- jQuery first, then Popper.js, then Bootstrap JS -->
-    <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-    <script>
-      $('.delete').click(function (e) {
-        var clickedButton = $(this);
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+  <script>
+    $('.delete').click(function (e) {
+      var clickedButton = $(this);
+      if(confirm('Are you sure you want to delete this task?')) {
         $.ajax({
           method: 'DELETE',
           url: '/delete',
-          // dataset.id is from: data-id= posts[i]._id 
           data: { _id: e.target.dataset.id }
         }).done((res) => {
-          clickedButton.parent('li').fadeOut();
-          console.log('deleted');
+          clickedButton.closest('li').fadeOut(400, function() {
+            $(this).remove();
+          });
         }).fail((xhr, code, err) => {
-          console.error('Delete failed:', err);
           alert('Failed to delete post');
         });
-      });
-    </script>
+      }
+    });
+  </script>
 
-    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
-      integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo"
-      crossorigin="anonymous"></script>
-    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
-      integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6"
-      crossorigin="anonymous"></script>
+  <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
 </body>
 
 </html>

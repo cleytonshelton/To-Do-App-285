@@ -18,9 +18,17 @@ export function createRouter(db) {
 
   /**
    * GET / - Home page with write form
-   * Renders the form for creating a new post
+   * Renders the home page with a form to create new posts
    */
   router.get('/', (req, res) => {
+    res.render('home.ejs');
+  });
+
+  /**
+   * GET /write - Write form page
+   * Renders the form for creating a new post
+   */
+  router.get('/write', (req, res) => {
     res.render('write.ejs');
   });
 

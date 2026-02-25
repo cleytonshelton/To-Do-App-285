@@ -52,20 +52,21 @@ export function createApiRouter(db) {
 
   /**
    * POST /api/posts
-   * Create a new post with auto-increment _id
-   */
+   * Create a new post with auto-increment _id and default status
+  */
   router.post('/posts', async (req, res) => {
     try {
-      const { title, date } = req.body || {};
+      const { title, date, status } = req.body || {};
       
       if (!title) {
         return res.status(400).json({ error: 'title is required' });
       }
 
-      // The ORDB adapter will automatically generate the next _id
+      // Automatically defaults to 'pending' if status is missing
       const newPost = await db.insertOne(COLLECTION, {
         title,
-        date: date || ''
+        date: date || '',
+        status: status || 'pending'
       });
       
       res.status(201).json(newPost);
@@ -77,7 +78,7 @@ export function createApiRouter(db) {
 
   /**
    * PUT /api/posts/:id
-   * Update an existing post
+   * Update an existing post including its status
    */
   router.put('/posts/:id', async (req, res) => {
     try {
@@ -87,12 +88,12 @@ export function createApiRouter(db) {
         return res.status(400).json({ error: 'Invalid id' });
       }
 
-      const { title, date } = req.body || {};
+      const { title, date, status } = req.body || {};
       
-      // Build update object with only provided fields
       const update = {};
       if (title !== undefined) update.title = title;
       if (date !== undefined) update.date = date;
+      if (status !== undefined) update.status = status; // Added status support
 
       if (Object.keys(update).length === 0) {
         return res.status(400).json({ error: 'No fields to update' });

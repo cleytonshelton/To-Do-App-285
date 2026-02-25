@@ -1,0 +1,93 @@
+/* Core Variables for easy color swapping */
+:root {
+  --bg-body: #f8fafc;
+  --text-main: #1e293b;
+  --text-muted: #64748b;
+  --card-bg: #ffffff;
+  --primary: #4f46e5;
+  --primary-hover: #4338ca;
+  
+  /* Status Colors */
+  --status-pending-bg: #e0f2fe;
+  --status-pending-text: #075985;
+  --status-progress-bg: #fef9c3;
+  --status-progress-text: #854d0e;
+  --status-completed-bg: #dcfce7;
+  --status-completed-text: #166534;
+}
+
+body {
+  background-color: var(--bg-body);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  color: var(--text-main);
+  line-height: 1.6;
+}
+
+/* Card Styling */
+.custom-card {
+  border: none;
+  border-radius: 16px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  background: var(--card-bg);
+  padding: 1.5rem;
+}
+
+/* Modern Status Badges */
+.status-badge {
+  font-weight: 600;
+  padding: 0.4rem 0.8rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  display: inline-block;
+}
+
+.status-pending { background: var(--status-pending-bg); color: var(--status-pending-text); }
+.status-in-progress { background: var(--status-progress-bg); color: var(--status-progress-text); }
+.status-completed { background: var(--status-completed-bg); color: var(--status-completed-text); }
+
+/* Form Controls */
+.form-control {
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  padding: 0.6rem 1rem;
+  transition: all 0.2s;
+}
+
+.form-control:focus {
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
+}
+
+/* Buttons */
+.btn-modern {
+  border-radius: 8px;
+  font-weight: 600;
+  padding: 0.6rem 1.2rem;
+  transition: all 0.2s;
+}
+
+.btn-primary-modern {
+  background-color: var(--primary);
+  color: white;
+  border: none;
+}
+
+.btn-primary-modern:hover {
+  background-color: var(--primary-hover);
+  transform: translateY(-1px);
+}
+
+/* List Item Styles */
+.list-group-item {
+  border: none;
+  margin-bottom: 0.75rem;
+  border-radius: 12px !important;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+  transition: transform 0.2s;
+}
+
+.list-group-item:hover {
+  transform: scale(1.01);
+}
