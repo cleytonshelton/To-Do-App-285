@@ -14,7 +14,7 @@
 import path from 'path';
 import { fileURLToPath } from 'url';
 import { MongoDBAdapter } from './mongoDB_adapter.js';
-//import { SQLiteAdapter } from './sqlite-adapter.js';
+import { SQLiteAdapter } from './sqlite_adapter.js';
 import uri from './uri.js'
 
 // ES module equivalent of __dirname
