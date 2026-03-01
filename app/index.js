@@ -71,3 +71,17 @@ process.on('SIGTERM', async () => {
 
 // Start the server
 startServer();
+// API for JSON
+
+app.get('/listjson', async function (req, resp) {
+  try {
+    const res = await posts.find().toArray();
+    resp.send(res)
+  } catch (e) {
+    console.error(e);
+  }
+});
+
+app.get('/calendar', function (req, resp) {
+  resp.render('calendar.ejs');
+});
