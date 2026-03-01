@@ -2,35 +2,63 @@
 <html lang="en">
 
 <head>
-  <!-- Required meta tags -->
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
 
-  <!-- Bootstrap CSS -->
-  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
-    integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous" />
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="/css/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 
-  <title>Document</title>
+  <title>Edit Post - Todo App</title>
 </head>
 
 <body>
   <%- include('nav.ejs') %>
-    <h4 class="container mt-4"><strong>Edit Page</strong></h4>
 
-    <div class="container mt-3">
-      <form action="/edit?_method=PUT" method="POST">
-        <input value="<%= data._id %>" name="id" style="display : none">
-        <div class="form-group">
-          <label>Update: What to do today</label>
-          <input type="text" class="form-control" name="title" value=<%=data.title %> />
+  <div class="container py-5">
+    <div class="row justify-content-center">
+      <div class="col-md-8">
+        
+        <h4 class="mb-4"><strong>Edit Task</strong></h4>
+
+        <div class="card custom-card">
+          <div class="card-body">
+            <form action="/edit?_method=PUT" method="POST">
+              <input value="<%= data._id %>" name="id" style="display : none">
+              
+              <div class="form-group">
+                <label class="font-weight-600">Update Task Title</label>
+                <input type="text" class="form-control" name="title" value="<%= data.title %>" placeholder="What needs to be done?" />
+              </div>
+              
+              <div class="form-group">
+                <label class="font-weight-600">Update Date</label>
+                <input type="text" class="form-control" name="date" value="<%= data.date %>" placeholder="e.g., Feb 24, 2026" />
+              </div>
+
+              <div class="form-group">
+                <label class="font-weight-600">Update Status</label>
+                <select class="form-control" name="status">
+                  <option value="Pending" <%= data.status === 'Pending' ? 'selected' : '' %>>Pending</option>
+                  <option value="In Progress" <%= data.status === 'In Progress' ? 'selected' : '' %>>In Progress</option>
+                  <option value="Completed" <%= data.status === 'Completed' ? 'selected' : '' %>>Completed</option>
+                </select>
+              </div>
+
+              <div class="mt-4">
+                <button type="submit" class="btn btn-modern btn-primary-modern mr-2">Update Changes</button>
+                <a href="/list" class="btn btn-modern btn-outline-secondary">Cancel</a>
+              </div>
+            </form>
+          </div>
         </div>
-        <div class="form-group">
-          <label>Update: Date</label>
-          <input type="text" class="form-control" name="date" value=<%=data.date %> />
-        </div>
-        <button type="submit" class="btn btn-outline-secondary">Submit</button>
-      </form>
+
+      </div>
     </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
 </body>
 
 </html>

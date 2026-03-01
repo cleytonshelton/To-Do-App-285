@@ -1,33 +1,41 @@
-// db.js
-import { MongoClient } from 'mongodb';
-import uri, { databasename } from './uri.js'
+/**
+ * Database Initialization and Configuration
+ * 
+ * This module wraps the ORDB bridge and provides database initialization.
+ * It automatically selects the appropriate database adapter (MongoDB or SQLite)
+ * based on environment configuration.
+ */
 
-const DATABASE = databasename;
-const POSTS = 'posts';
-const COUNTER = 'counter';
+import { db } from '../db/bridge.js';
 
-let db = null;
-
-// Create a single MongoClient instance
-export const client = new MongoClient(uri); // connection
-
-// Create and reuse a single database connection
-export async function getDB(database = DATABASE) {
-  if (db) return db;          // reuse existing connection
-
-  await client.connect();     // connect once
-  db = client.db(database);   // store db globally
-  return db;
+/**
+ * Initialize the database connection
+ * This function should be called before starting the server
+ */
+export async function initializeDatabase() {
+  try {
+    await db.connect();
+    console.log('Database connected successfully');
+    console.log(`Database type: ${process.env.DB_TYPE || 'sqlite'}`);
+  } catch (error) {
+    console.error('Failed to initialize database:', error);
+    throw error;
+  }
 }
 
-// Return the "posts" collection
-export function getPostsCollection() {
-  if (!db) throw new Error("Database not connected. Call connect() first.");
-  return db.collection(POSTS);
+/**
+ * Close the database connection
+ * This function should be called during graceful shutdown
+ */
+export async function closeDatabase() {
+  try {
+    await db.disconnect();
+    console.log('Database connection closed');
+  } catch (error) {
+    console.error('Error closing database:', error);
+    throw error;
+  }
 }
 
-// Return the "counter" collection
-export function getCounterCollection() {
-  if (!db) throw new Error("Database not connected. Call connect() first.");
-  return db.collection(COUNTER);
-}
+// Export database instance
+export { db };
