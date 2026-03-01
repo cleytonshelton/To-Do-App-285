@@ -32,17 +32,20 @@ export function createApiRouter(db) {
   router.get('/posts/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
-      
+
       if (Number.isNaN(id)) {
         return res.status(400).json({ error: 'Invalid id' });
       }
 
       const post = await db.findOne(COLLECTION, { _id: id });
-      
+
       if (!post) {
         return res.status(404).json({ error: 'Post not found' });
       }
-      
+
+      // FIX: Sanitize single post as well
+      post.status = post.status || 'pending';
+
       res.json(post);
     } catch (error) {
       console.error('Error fetching post:', error);
@@ -52,23 +55,23 @@ export function createApiRouter(db) {
 
   /**
    * POST /api/posts
-   * Create a new post with auto-increment _id and default status
-  */
+   */
   router.post('/posts', async (req, res) => {
     try {
+      // If using standard HTML forms, req.body might need parsing
       const { title, date, status } = req.body || {};
-      
+
       if (!title) {
         return res.status(400).json({ error: 'title is required' });
       }
 
-      // Automatically defaults to 'pending' if status is missing
       const newPost = await db.insertOne(COLLECTION, {
-        title,
+        title: title,
         date: date || '',
-        status: status || 'pending'
+        // Use the incoming status if it exists, otherwise default to pending
+        status: (status && status.trim() !== '') ? status : 'pending'
       });
-      
+
       res.status(201).json(newPost);
     } catch (error) {
       console.error('Error creating post:', error);
@@ -83,13 +86,13 @@ export function createApiRouter(db) {
   router.put('/posts/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
-      
+
       if (Number.isNaN(id)) {
         return res.status(400).json({ error: 'Invalid id' });
       }
 
       const { title, date, status } = req.body || {};
-      
+
       const update = {};
       if (title !== undefined) update.title = title;
       if (date !== undefined) update.date = date;
@@ -104,11 +107,11 @@ export function createApiRouter(db) {
         { _id: id },
         update
       );
-      
+
       if (!updatedPost) {
         return res.status(404).json({ error: 'Post not found' });
       }
-      
+
       res.json(updatedPost);
     } catch (error) {
       console.error('Error updating post:', error);
@@ -123,17 +126,17 @@ export function createApiRouter(db) {
   router.delete('/posts/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
-      
+
       if (Number.isNaN(id)) {
         return res.status(400).json({ error: 'Invalid id' });
       }
 
       const deleted = await db.deleteOne(COLLECTION, { _id: id });
-      
+
       if (!deleted) {
         return res.status(404).json({ error: 'Post not found' });
       }
-      
+
       res.json({ ok: true, deletedId: id });
     } catch (error) {
       console.error('Error deleting post:', error);

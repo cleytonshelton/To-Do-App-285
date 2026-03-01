@@ -38,13 +38,16 @@ export function createRouter(db) {
    */
   router.post('/add', async (req, res) => {
     try {
-      const { title, date } = req.body;
-      
+      // 1. Add 'status' to the destructured variables
+      const { title, date, status } = req.body;
+
       await db.insertOne(COLLECTION, {
         title: title || '',
-        date: date || ''
+        date: date || '',
+        // 2. Pass the status to the database
+        status: status || 'Pending'
       });
-      
+
       res.redirect('/');
     } catch (error) {
       console.error('Error adding post:', error);
@@ -73,13 +76,13 @@ export function createRouter(db) {
   router.get('/detail/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
-      
+
       if (Number.isNaN(id)) {
         return res.status(400).send('Invalid id');
       }
-      
+
       const data = await db.findOne(COLLECTION, { _id: id });
-      
+
       if (data) {
         res.render('detail.ejs', { data });
       } else {
@@ -98,13 +101,13 @@ export function createRouter(db) {
   router.get('/edit/:id', async (req, res) => {
     try {
       const id = parseInt(req.params.id, 10);
-      
+
       if (Number.isNaN(id)) {
         return res.status(400).send('Invalid id');
       }
-      
+
       const data = await db.findOne(COLLECTION, { _id: id });
-      
+
       if (data) {
         res.render('edit.ejs', { data });
       } else {
@@ -123,20 +126,22 @@ export function createRouter(db) {
   router.put('/edit', async (req, res) => {
     try {
       const id = parseInt(req.body.id, 10);
-      
+
       if (Number.isNaN(id)) {
         return res.status(400).send('Invalid id');
       }
-      
+
+      // Add status here to ensure it actually saves to the DB
       await db.updateOne(
         COLLECTION,
         { _id: id },
         {
           title: req.body.title,
-          date: req.body.date
+          date: req.body.date,
+          status: req.body.status || 'pending' // <--- Fix: Status added here
         }
       );
-      
+
       res.redirect('/list');
     } catch (error) {
       console.error('Error updating post:', error);
@@ -151,17 +156,17 @@ export function createRouter(db) {
   router.delete('/delete', async (req, res) => {
     try {
       const id = parseInt(req.body._id, 10);
-      
+
       if (Number.isNaN(id)) {
         return res.status(400).json({ error: 'Invalid id' });
       }
-      
+
       const deleted = await db.deleteOne(COLLECTION, { _id: id });
-      
+
       if (!deleted) {
         return res.status(404).json({ error: 'Post not found' });
       }
-      
+
       res.json({ ok: true, deletedId: id });
     } catch (error) {
       console.error('Error deleting post:', error);
