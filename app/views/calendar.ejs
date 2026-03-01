@@ -1,15 +1,25 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-  <title>Calendar View</title>
-  <link rel="stylesheet" href="/public/style.css">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <title>Calendar View - Todo App</title>
+  
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="/style.css">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
 </head>
-<body>
+<body class="bg-light">
+  <div class="container py-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+      <h2 class="font-weight-bold">Task Calendar</h2>
+      <a href="/list" class="btn btn-modern btn-outline-secondary">Back to List</a>
+    </div>
 
-<h1>Task Calendar</h1>
+    <div id="calendar" class="custom-card shadow-sm p-0 overflow-hidden">
+      </div>
+  </div>
 
-<div id="calendar"></div>
-
-<script src="/public/calendar.js"></script>
+  <script src="/calendar.js"></script>
 </body>
 </html>

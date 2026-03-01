@@ -28,14 +28,21 @@ function renderCalendar() {
     const cell = document.createElement("div");
     cell.className = "day";
 
-    const dateStr = `${year}-${String(month+1).padStart(2,"0")}-${String(day).padStart(2,"0")}`;
+    const dateStr = `${year}-${String(month + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`;
 
     cell.innerHTML = `<strong>${day}</strong>`;
 
     tasks.forEach(task => {
-      if (task.date === dateStr) {
+      
+      const taskDate = new Date(task.date);
+      
+      if (!isNaN(taskDate) &&
+        taskDate.getFullYear() === year &&
+        taskDate.getMonth() === month &&
+        taskDate.getDate() === day) {
+
         const t = document.createElement("div");
-        t.className = "task";
+        t.className = `task status-${task.status || 'pending'}`;
         t.textContent = "• " + task.title;
         cell.appendChild(t);
       }

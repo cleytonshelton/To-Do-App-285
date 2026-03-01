@@ -32,7 +32,7 @@ app.set('views', 'views');
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(methodOverride('_method'));
-app.use('/public', express.static('public'));
+app.use(express.static('public'));
 
 // ========== Routes ==========
 app.use('/api', createApiRouter(db));
@@ -69,19 +69,15 @@ process.on('SIGTERM', async () => {
   process.exit(0);
 });
 
-// Start the server
-startServer();
 // API for JSON
 
-app.get('/listjson', async function (req, resp) {
-  try {
-    const res = await posts.find().toArray();
-    resp.send(res)
-  } catch (e) {
-    console.error(e);
-  }
+app.get('/listjson', async (req, res) => {
+  const posts = await db.findAll('posts');
+  res.json(posts);
 });
 
 app.get('/calendar', function (req, resp) {
   resp.render('calendar.ejs');
 });
+
+startServer();
