@@ -111,3 +111,20 @@ Run full Sprint 2 validation:
 - Update documentation and prepare final demo notes
 
 Finalize Sprint 2 deliverables and project handoff materials.
+
+---
+
+## Screenshots
+
+### Homepage
+![Homepage](../../images/homepage.png)
+
+---
+
+### Calendar
+![Calendar](../../images/calendar.png)
+
+---
+
+### Tasks
+![Tasks](../../images/tasks.png)
