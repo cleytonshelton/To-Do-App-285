@@ -60,14 +60,13 @@ title: ToDo App
 
 ---
 
-### Week 10: Sprint 2 Planning + Dashboard Foundation
+### Week 10: Sprint 2 Planning + Cleanup
 
 Define Sprint 2 goals, acceptance criteria, and task breakdown.
 
-Begin Dashboard with Modular Task Blocks:
-- Create main dashboard layout
-- Display task title, priority, and status in each block
-- Set up modular structure for future add-ons
+Start new features and clean up features:
+- Clean up Calendar
+- Clean up adding tasks and progress
 
 ---
 
