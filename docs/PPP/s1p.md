@@ -38,7 +38,7 @@ title: ToDo App
 ## Analysis & Improvement Plan
 
 - Better communication
-- Better teamwork 
+- Give out tasks better
 - 
 ---
 
