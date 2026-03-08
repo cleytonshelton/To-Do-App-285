@@ -111,10 +111,16 @@ export function createRouter(db) {
     try {
       const { id, title, date, status, priority, subtasks } = req.body;
 
-      // Logic: Convert EJS Form Object to Mongoose Array
-      let subtaskList = [];
-      if (subtasks) {
-        subtaskList = Object.values(subtasks).map(sub => ({
+      // Create an update object containing ONLY the fields that were sent
+      const updateData = {};
+      if (title !== undefined) updateData.title = title;
+      if (date !== undefined) updateData.date = date;
+      if (status !== undefined) updateData.status = status;
+      if (priority !== undefined) updateData.priority = parseInt(priority);
+
+      // Handle Subtasks if they exist in the request
+      if (subtasks !== undefined) {
+        updateData.subtasks = Object.values(subtasks).map(sub => ({
           title: sub.title,
           completed: sub.completed === 'true' || sub.completed === true
         }));
@@ -123,21 +129,51 @@ export function createRouter(db) {
       await db.updateOne(
         COLLECTION,
         { _id: id },
-        {
-          title,
-          date: date || null,
-          status: status || 'Pending',
-          priority: parseInt(priority) || 3,
-          subtasks: subtaskList
-        }
+        updateData // This only updates what is present in updateData
       );
 
+      // If it's an AJAX request (like your drag-and-drop), return JSON
+      if (req.xhr || req.headers.accept.indexOf('json') > -1) {
+        return res.json({ ok: true });
+      }
+
+      // Otherwise, redirect (for the standard Edit Form)
       res.redirect('/list');
     } catch (error) {
-      console.error('Error updating task:', error);
+      console.error('Update error:', error);
       res.status(500).send('Failed to update task');
     }
   });
+
+  /**
+   * PUT /tasks/:id/subtask/:index - Toggle subtask status (AJAX)
+   */
+  router.put('/tasks/:id/subtask/:index', async (req, res) => {
+    try {
+      const { id, index } = req.params;
+      const { completed } = req.body;
+
+      // Construct the positional update path for Mongoose/MongoDB
+      const updatePath = `subtasks.${index}.completed`;
+
+      // Use the ORDB bridge to update the specific sub-document field
+      const updatedTask = await db.updateOne(
+        COLLECTION,
+        { _id: id },
+        { [updatePath]: completed === 'true' || completed === true }
+      );
+
+      if (!updatedTask) {
+        return res.status(404).json({ error: 'Task not found' });
+      }
+
+      res.json({ ok: true, updatedTask });
+    } catch (error) {
+      console.error('Error toggling subtask:', error);
+      res.status(500).json({ error: 'Failed to toggle subtask' });
+    }
+  });
+
 
   /**
    * DELETE /delete - Delete a task (AJAX request)
@@ -158,7 +194,7 @@ export function createRouter(db) {
       res.status(500).json({ error: 'Failed to delete task' });
     }
   });
-  
+
   router.get('/listjson', async (req, res) => {
     const tasks = await db.findAll('tasks');
     res.json(tasks);

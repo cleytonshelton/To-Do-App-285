@@ -11,7 +11,12 @@
 
   <style>
     body { background-color: #f4f7f9; font-family: 'Inter', sans-serif; }
-    .detail-card { border: 1px solid #dfe1e5; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); background: white; }
+    .detail-card { border: 1px solid #dfe1e5; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); background: white; overflow: hidden; }
+    
+    /* Progress Bar Styling */
+    .progress { height: 6px; border-radius: 0; background-color: #e9ecef; }
+    .progress-bar { background-color: #107c10; transition: width 0.6s ease; }
+
     .azure-status-pill { font-size: 0.75rem; font-weight: 700; padding: 4px 12px; border-radius: 12px; text-transform: uppercase; }
     
     /* Azure Status Colors */
@@ -23,8 +28,12 @@
     .prio-text-1 { color: #d13438; } .prio-text-2 { color: #ffb900; }
     .prio-text-3 { color: #0078d4; } .prio-text-4 { color: #666; }
 
-    .subtask-row { border-bottom: 1px solid #f0f2f5; padding: 10px 0; display: flex; align-items: center; }
+    /* Interactive Subtasks */
+    .subtask-row { border-bottom: 1px solid #f0f2f5; padding: 12px 0; display: flex; align-items: center; transition: background 0.2s; }
+    .subtask-row:hover { background-color: #fcfcfc; }
     .subtask-row:last-child { border-bottom: none; }
+    .subtask-check { cursor: pointer; font-size: 1.1rem; transition: transform 0.1s; }
+    .subtask-check:hover { transform: scale(1.15); }
     .completed-text { text-decoration: line-through; color: #a1a1a1; }
     .label-heading { color: #5e6c84; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
   </style>
@@ -42,11 +51,21 @@
         <nav aria-label="breadcrumb">
           <ol class="breadcrumb bg-transparent p-0 mb-4">
             <li class="breadcrumb-item"><a href="/list" style="color: #0078d4;">Sprint Board</a></li>
-            <li class="breadcrumb-item active">Work Item <%= data._id.toString().slice(-5) %></li>
+            <li class="breadcrumb-item active">Work Item #<%= data._id.toString().slice(-5) %></li>
           </ol>
         </nav>
 
         <div class="card detail-card">
+          <% 
+            let total = data.subtasks ? data.subtasks.length : 0;
+            let done = data.subtasks ? data.subtasks.filter(s => s.completed).length : 0;
+            let percent = total > 0 ? Math.round((done / total) * 100) : 0;
+          %>
+          
+          <div class="progress" title="<%= percent %>% of child items completed">
+            <div class="progress-bar" role="progressbar" style="width: <%= percent %>%" aria-valuenow="<%= percent %>" aria-valuemin="0" aria-valuemax="100"></div>
+          </div>
+
           <div class="card-body p-5">
             
             <div class="d-flex justify-content-between align-items-start mb-4">
@@ -54,7 +73,7 @@
                 <h1 class="display-5 font-weight-bold mb-2"><%= data.title %></h1>
                 <p class="text-muted mb-0">
                   <i class="far fa-calendar-check mr-2"></i>Due Date: 
-                  <strong><%= data.date ? new Date(data.date).toLocaleString() : 'Unscheduled' %></strong>
+                  <strong><%= data.date ? new Date(data.date).toLocaleString([], { dateStyle: 'medium', timeStyle: 'short' }) : 'Unscheduled' %></strong>
                 </p>
               </div>
               <span class="azure-status-pill status-<%= (data.status || 'Pending').replace(/\s+/g, '-') %>">
@@ -65,38 +84,46 @@
             <hr class="my-4">
 
             <div class="row mb-5">
-              <div class="col-sm-3">
+              <div class="col-sm-3 border-right">
                 <div class="label-heading">Priority</div>
-                <p class="font-weight-bold prio-text-<%= data.priority %>">
+                <p class="font-weight-bold prio-text-<%= data.priority %> mb-0">
                   <i class="fas fa-circle mr-1" style="font-size: 0.6rem;"></i>
                   <%= data.priority == 1 ? 'Critical' : data.priority == 2 ? 'High' : data.priority == 3 ? 'Medium' : 'Low' %>
                 </p>
               </div>
+              <div class="col-sm-3 border-right">
+                <div class="label-heading">Progress</div>
+                <p class="mb-0"><strong><%= done %> / <%= total %></strong> Child Items</p>
+              </div>
               <div class="col-sm-6 text-right">
                 <div class="label-heading">Work Item ID</div>
-                <p class="text-muted">#<%= data._id %></p>
+                <p class="text-muted mb-0 small">#<%= data._id %></p>
               </div>
             </div>
 
             <div class="mb-5">
               <div class="label-heading">Subtasks (Child Items)</div>
-              <div class="border rounded px-3 py-2 bg-light">
-                <% if (data.subtasks && data.subtasks.length > 0) { %>
-                  <% data.subtasks.forEach(sub => { %>
+              <div class="border rounded px-3 bg-light">
+                <% if (total > 0) { %>
+                  <% data.subtasks.forEach((sub, index) => { %>
                     <div class="subtask-row">
-                      <i class="<%= sub.completed ? 'fas fa-check-square text-success' : 'far fa-square text-muted' %> mr-3"></i>
-                      <span class="<%= sub.completed ? 'completed-text' : '' %>"><%= sub.title %></span>
+                      <i class="<%= sub.completed ? 'fas fa-check-square text-success' : 'far fa-square text-muted' %> mr-3 subtask-check" 
+                         onclick="toggleSubtask('<%= data._id %>', <%= index %>, <%= sub.completed %>)">
+                      </i>
+                      <span class="<%= sub.completed ? 'completed-text' : '' %>" style="font-size: 0.95rem;">
+                        <%= sub.title %>
+                      </span>
                     </div>
                   <% }) %>
                 <% } else { %>
-                  <p class="text-muted mb-0 py-2 small">No child items defined for this task.</p>
+                  <p class="text-muted mb-0 py-3 small text-center italic">No child items defined for this task. Click Edit to add some.</p>
                 <% } %>
               </div>
             </div>
 
             <div class="d-flex pt-4 border-top">
-              <a href="/edit/<%= data._id %>" class="btn btn-azure-primary px-4 mr-2" style="background-color: #0078d4; color: white;">
-                <i class="fas fa-edit mr-2"></i>Edit Work Item
+              <a href="/edit/<%= data._id %>" class="btn btn-azure-primary px-4 mr-2" style="background-color: #0078d4; color: white; border: none;">
+                <i class="fas fa-edit mr-2"></i>Edit Details
               </a>
               <a href="/list" class="btn btn-outline-secondary px-4">
                 Back to Board
@@ -110,7 +137,32 @@
     </div>
   </div>
 
-  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+
+  <script>
+    /**
+     * Toggles a subtask completion status in the database
+     */
+    function toggleSubtask(taskId, subtaskIndex, currentStatus) {
+      // Send the opposite of current status
+      const newStatus = !currentStatus;
+      
+      $.ajax({
+        method: 'PUT',
+        // Assuming your API route is /api/tasks/:id/subtask/:index
+        url: '/tasks/' + taskId + '/subtask/' + subtaskIndex, 
+        data: { completed: newStatus },
+        success: function(response) {
+          // Simple reload to refresh progress bar and icons
+          location.reload();
+        },
+        error: function(err) {
+          console.error("Error updating subtask:", err);
+          alert("Failed to update child item. Please try again.");
+        }
+      });
+    }
+  </script>
 </body>
 </html>

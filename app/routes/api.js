@@ -87,6 +87,35 @@ export function createApiRouter(db) {
   });
 
   /**
+   * PUT /tasks/:id/subtask/:index - Toggle subtask status (AJAX)
+   */
+  router.put('/tasks/:id/subtask/:index', async (req, res) => {
+    try {
+      const { id, index } = req.params;
+      const { completed } = req.body;
+
+      // Construct the positional update path for Mongoose/MongoDB
+      const updatePath = `subtasks.${index}.completed`;
+
+      // Use the ORDB bridge to update the specific sub-document field
+      const updatedTask = await db.updateOne(
+        COLLECTION,
+        { _id: id },
+        { [updatePath]: completed === 'true' || completed === true }
+      );
+
+      if (!updatedTask) {
+        return res.status(404).json({ error: 'Task not found' });
+      }
+
+      res.json({ ok: true, updatedTask });
+    } catch (error) {
+      console.error('Error toggling subtask:', error);
+      res.status(500).json({ error: 'Failed to toggle subtask' });
+    }
+  });
+
+  /**
    * DELETE /api/tasks/:id (Remains unchanged)
    */
   router.delete('/tasks/:id', async (req, res) => {

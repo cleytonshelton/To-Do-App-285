@@ -123,6 +123,36 @@ body {
 
 /* ── Calendar ──────────────────────────────────────────────── */
 
+/* Calendar Task Styling */
+.task {
+    font-size: 0.75rem;
+    padding: 2px 4px;
+    margin-top: 2px;
+    border-radius: 3px;
+    color: white; /* Contrast for the background colors */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Priority Background Colors */
+.prio-1 { background-color: #d13438 !important; } /* Critical */
+.prio-2 { background-color: #ffb900 !important; color: #333 !important; } /* High */
+.prio-3 { background-color: #0078d4 !important; } /* Medium/Azure */
+.prio-4 { background-color: #ccc !important; color: #333 !important; } /* Low */
+
+/* Ensure In-Progress tasks stay visible and distinct */
+.status-in-progress {
+    border: 1px solid rgba(255,255,255,0.5);
+    font-weight: 600;
+}
+
+/* Completed tasks */
+.status-completed {
+    background-color: #107c10 !important; /* Azure Green for Done */
+    color: white !important;
+}
+
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);

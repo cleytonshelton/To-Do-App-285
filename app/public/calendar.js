@@ -90,8 +90,22 @@ function renderCalendar() {
         taskDate.getDate() === day
       ) {
         const t = document.createElement("div");
-        t.className = `task status-${(task.status || "Pending").toLowerCase().replace(" ", "-")}`;
-        t.textContent = "• " + task.title;
+        
+        // 1. Assign classes for status and priority
+        const statusClass = (task.status || "Pending").toLowerCase().replace(" ", "-");
+        const priorityClass = `prio-${task.priority || 3}`;
+        
+        t.className = `task status-${statusClass} ${priorityClass}`;
+        
+        // 2. Add checkmark if complete, otherwise use the dot
+        let prefix = "• ";
+        if (task.status === "Completed") {
+          prefix = "✓ ";
+          t.style.textDecoration = "line-through";
+          t.style.opacity = "0.7";
+        }
+
+        t.textContent = prefix + task.title;
         cell.appendChild(t);
       }
     });
