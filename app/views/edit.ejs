@@ -109,13 +109,14 @@
 
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
   <script>
-    // Simple logic to add/remove subtasks dynamically in the UI
-    let subtaskIndex = data.subtasks ? data.subtasks.length : 0;
+    // FIXED: Using EJS to set the initial index from the server data
+    let subtaskIndex = <%= data.subtasks ? data.subtasks.length : 0 %>;
 
     $('#add-subtask-btn').click(function() {
       const html = `
         <div class="subtask-item">
           <div class="d-flex align-items-center flex-grow-1">
+            <input type="hidden" name="subtasks[${subtaskIndex}][completed]" value="false">
             <input type="checkbox" name="subtasks[${subtaskIndex}][completed]" value="true" class="mr-2">
             <input type="text" name="subtasks[${subtaskIndex}][title]" placeholder="New subtask..." class="form-control form-control-sm" required>
           </div>
