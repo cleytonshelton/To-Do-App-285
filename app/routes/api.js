@@ -1,23 +1,20 @@
 /**
  * Unified API Routes using ORDB
- * 
- * This router works with any database through the ORDB interface.
- * No database-specific code here - just business logic!
  */
 
 import express from 'express';
 
 export function createApiRouter(db) {
   const router = express.Router();
-  const COLLECTION = 'tasks'; // ← updated from 'posts'
+  const COLLECTION = 'tasks';
 
   /**
    * GET /api/tasks
-   * Retrieve all tasks, sorted by createdAt ascending
    */
   router.get('/tasks', async (req, res) => {
     try {
-      const tasks = await db.findAll(COLLECTION, {}, { sort: { createdAt: 1 } });
+      // Sorting by Priority (1-Critical first) then by Date
+      const tasks = await db.findAll(COLLECTION, {}, { sort: { priority: 1, createdAt: 1 } });
       res.json(tasks);
     } catch (error) {
       console.error('Error fetching tasks:', error);
@@ -26,32 +23,12 @@ export function createApiRouter(db) {
   });
 
   /**
-   * GET /api/tasks/:id
-   * Retrieve a single task by ID
-   */
-  router.get('/tasks/:id', async (req, res) => {
-    try {
-      const { id } = req.params;
-      const task = await db.findOne(COLLECTION, { _id: id });
-
-      if (!task) {
-        return res.status(404).json({ error: 'Task not found' });
-      }
-
-      res.json(task);
-    } catch (error) {
-      console.error('Error fetching task:', error);
-      res.status(500).json({ error: 'Failed to fetch task' });
-    }
-  });
-
-  /**
    * POST /api/tasks
-   * Create a new task
+   * Create a new task with priority and subtasks
    */
   router.post('/tasks', async (req, res) => {
     try {
-      const { title, date, status } = req.body || {};
+      const { title, date, status, priority, subtasks } = req.body || {};
 
       if (!title) {
         return res.status(400).json({ error: 'title is required' });
@@ -59,8 +36,10 @@ export function createApiRouter(db) {
 
       const newTask = await db.insertOne(COLLECTION, {
         title,
-        date: date || '',
-        status: (status && status.trim() !== '') ? status : 'Pending', // ← capital P to match enum
+        date: date || null,
+        status: (status && status.trim() !== '') ? status : 'Pending',
+        priority: priority ? parseInt(priority) : 3, // Default to Medium (3)
+        subtasks: Array.isArray(subtasks) ? subtasks : [] // Expecting array from JSON
       });
 
       res.status(201).json(newTask);
@@ -72,17 +51,19 @@ export function createApiRouter(db) {
 
   /**
    * PUT /api/tasks/:id
-   * Update an existing task
+   * Update an existing task including subtasks and priority
    */
   router.put('/tasks/:id', async (req, res) => {
     try {
       const { id } = req.params;
-      const { title, date, status } = req.body || {};
+      const { title, date, status, priority, subtasks } = req.body || {};
 
       const update = {};
       if (title !== undefined) update.title = title;
-      if (date !== undefined) update.date = date;
+      if (date !== undefined) update.date = date || null;
       if (status !== undefined) update.status = status;
+      if (priority !== undefined) update.priority = parseInt(priority);
+      if (subtasks !== undefined) update.subtasks = Array.isArray(subtasks) ? subtasks : [];
 
       if (Object.keys(update).length === 0) {
         return res.status(400).json({ error: 'No fields to update' });
@@ -106,21 +87,15 @@ export function createApiRouter(db) {
   });
 
   /**
-   * DELETE /api/tasks/:id
-   * Delete a task by ID
+   * DELETE /api/tasks/:id (Remains unchanged)
    */
   router.delete('/tasks/:id', async (req, res) => {
     try {
       const { id } = req.params;
       const deleted = await db.deleteOne(COLLECTION, { _id: id });
-
-      if (!deleted) {
-        return res.status(404).json({ error: 'Task not found' });
-      }
-
+      if (!deleted) return res.status(404).json({ error: 'Task not found' });
       res.json({ ok: true, deletedId: id });
     } catch (error) {
-      console.error('Error deleting task:', error);
       res.status(500).json({ error: 'Failed to delete task' });
     }
   });
