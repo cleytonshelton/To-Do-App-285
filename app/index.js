@@ -72,8 +72,8 @@ process.on('SIGTERM', async () => {
 // API for JSON
 
 app.get('/listjson', async (req, res) => {
-  const posts = await db.findAll('posts');
-  res.json(posts);
+  const tasks = await db.findAll('tasks');
+  res.json(tasks);
 });
 
 app.get('/calendar', function (req, resp) {

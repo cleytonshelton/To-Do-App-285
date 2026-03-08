@@ -1,84 +1,170 @@
 <!DOCTYPE html>
 <html lang="en">
-
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" />
-  <link rel="stylesheet" href="/css/style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  
+  <script src="https://cdn.jsdelivr.net/npm/sortablejs@1.15.0/Sortable.min.js"></script>
+  
+  <style>
+    :root {
+      --azure-blue: #0078d4;
+      --azure-bg: #f4f7f9;
+      --column-bg: #f0f2f5;
+      --todo-gold: #ffb900;
+      --done-green: #107c10;
+      /* Priority Colors */
+      --prio-1: #d13438; /* Critical - Red */
+      --prio-2: #ffb900; /* High - Orange/Yellow */
+      --prio-3: #0078d4; /* Medium - Blue */
+      --prio-4: #ccc;    /* Low - Grey */
+    }
 
-  <title>Task Dashboard - Todo App</title>
+    html, body { height: 100%; margin: 0; background-color: var(--azure-bg); overflow: hidden; }
+    body { font-family: 'Inter', sans-serif; display: flex; flex-direction: column; }
+
+    .header-section { background: white; padding: 1rem 2rem; border-bottom: 1px solid #dfe1e5; flex-shrink: 0; }
+    .board-wrapper { flex: 1; display: flex; justify-content: center; overflow-x: auto; padding: 1.5rem; }
+    .board-container { display: flex; gap: 1rem; height: 100%; align-items: flex-start; }
+    .board-column { width: 320px; background: var(--column-bg); border-radius: 4px; display: flex; flex-direction: column; max-height: 100%; border: 1px solid #dfe1e5; }
+
+    .column-header { padding: 12px 16px; font-size: 0.8rem; font-weight: 700; color: #5e6c84; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 0.5px; }
+    .task-list { padding: 8px; overflow-y: auto; flex: 1; min-height: 150px; }
+
+    /* Card Design */
+    .task-card {
+      background: white;
+      border-radius: 2px;
+      padding: 12px;
+      margin-bottom: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      border-left: 4px solid #ccc;
+      transition: box-shadow 0.2s;
+      cursor: grab;
+      position: relative;
+    }
+    .task-card:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.12); }
+    
+    /* Dynamic Status Colors */
+    .task-card[data-status-val="Pending"] { border-left-color: var(--todo-gold); }
+    .task-card[data-status-val="In Progress"] { border-left-color: var(--azure-blue); }
+    .task-card[data-status-val="Completed"] { border-left-color: var(--done-green); opacity: 0.8; }
+
+    /* Priority Markers */
+    .prio-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+    .prio-1 { background: var(--prio-1); box-shadow: 0 0 4px var(--prio-1); }
+    .prio-2 { background: var(--prio-2); }
+    .prio-3 { background: var(--prio-3); }
+    .prio-4 { background: var(--prio-4); }
+
+    .task-title { font-size: 0.85rem; font-weight: 500; color: #005a9e; text-decoration: none; display: block; margin-bottom: 8px; line-height: 1.4; }
+    .task-footer { font-size: 0.7rem; color: #666; display: flex; justify-content: space-between; align-items: center; }
+    .subtask-counter { background: #f0f2f5; padding: 2px 6px; border-radius: 4px; font-weight: 600; font-size: 0.65rem; }
+    
+    .delete-btn { color: #d13438; cursor: pointer; opacity: 0; transition: 0.2s; }
+    .task-card:hover .delete-btn { opacity: 1; }
+    .sortable-ghost { opacity: 0.3; transform: scale(0.95); }
+  </style>
+
+  <title>Azure DevOps Board</title>
 </head>
 
 <body>
   <%- include('nav.ejs') %>
 
-  <div class="container py-5">
-    <div class="d-flex justify-content-between align-items-center mb-5">
-      <div>
-        <h2 class="font-weight-bold mb-0">My Workspace</h2>
-        <p class="text-muted">You have <%= posts.length %> active tasks</p>
-      </div>
-      <a href="/write" class="btn btn-modern btn-primary-modern px-4 shadow-sm">+ New Task</a>
+  <div class="header-section">
+    <div class="d-flex justify-content-between align-items-center">
+      <h2 class="h5 font-weight-bold m-0">Sprint Board</h2>
+      <a href="/write" class="btn btn-primary btn-sm px-3" style="background: var(--azure-blue); border: none;">+ New Item</a>
     </div>
+  </div>
 
-    <div class="row">
-      <% for (var i=0; i < posts.length; i++){ %>
-        <div class="col-md-6 col-lg-4 mb-4 task-item">
-          <div class="card custom-card task-card-module">
-            <div class="card-body p-4">
-              <div class="mb-3">
-                <span class="status-badge status-<%= posts[i].status || 'pending' %> mb-2">
-                  <%= posts[i].status || 'pending' %>
-                </span>
-                <a href="/detail/<%= posts[i]._id %>" class="h5 d-block font-weight-bold text-dark text-decoration-none mt-2">
-                  <%= posts[i].title %>
-                </a>
-              </div>
-              
-              <p class="text-muted small mb-0">
-                <i class="far fa-calendar-alt mr-1"></i> <%= posts[i].date || 'No date set' %>
-              </p>
+  <div class="board-wrapper">
+    <div class="board-container">
+      
+      <% const cols = [
+          { label: 'To Do', status: 'Pending' },
+          { label: 'In Progress', status: 'In Progress' },
+          { label: 'Done', status: 'Completed' }
+      ]; %>
 
-              <div class="task-footer">
-                <a href="/edit/<%= posts[i]._id %>" class="btn btn-sm btn-light font-weight-600 text-primary">Edit</a>
-                <button class="delete btn btn-sm btn-outline-danger border-0" data-id="<%= posts[i]._id %>">
-                  <i class="fas fa-trash"></i> Delete
-                </button>
+      <% cols.forEach(col => { %>
+        <div class="board-column">
+          <div class="column-header">
+            <span><%= col.label %></span> 
+            <span class="badge-count" id="count-<%= col.status.replace(/\s+/g, '') %>">
+              <%= posts.filter(p => p.status === col.status).length %>
+            </span>
+          </div>
+          <div class="task-list" data-status="<%= col.status %>">
+            <% posts.filter(p => p.status === col.status).forEach(post => { %>
+              <div class="task-card" data-id="<%= post._id %>" data-status-val="<%= post.status %>">
+                
+                <div class="prio-dot prio-<%= post.priority || 3 %>" title="Priority <%= post.priority %>"></div>
+                
+                <a href="/detail/<%= post._id %>" class="task-title"><%= post.title %></a>
+                
+                <div class="task-footer">
+                  <div class="d-flex align-items-center">
+                    <% if (post.subtasks && post.subtasks.length > 0) { 
+                        const completedCount = post.subtasks.filter(s => s.completed).length;
+                    %>
+                      <span class="subtask-counter mr-2">
+                        <i class="fas fa-level-down-alt fa-rotate-90"></i> <%= completedCount %>/<%= post.subtasks.length %>
+                      </span>
+                    <% } %>
+                    <span><i class="far fa-calendar-alt mr-1"></i> <%= post.date ? new Date(post.date).toLocaleDateString() : 'No date' %></span>
+                  </div>
+                  <i class="fas fa-trash-alt delete-btn" data-id="<%= post._id %>"></i>
+                </div>
               </div>
-            </div>
+            <% }) %>
           </div>
         </div>
-      <% } %>
+      <% }) %>
+
     </div>
   </div>
 
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
   <script>
-    $('.delete').click(function (e) {
-      // Small logic fix to handle button click vs icon click
-      var id = $(this).data('id') || $(this).closest('button').data('id');
-      var cardWrapper = $(this).closest('.task-item');
+    document.querySelectorAll('.task-list').forEach(list => {
+      new Sortable(list, {
+        group: 'azure-board',
+        animation: 200,
+        ghostClass: 'sortable-ghost',
+        onEnd: function (evt) {
+          const taskId = evt.item.getAttribute('data-id');
+          const newStatus = evt.to.getAttribute('data-status');
+          evt.item.setAttribute('data-status-val', newStatus);
+          $.ajax({
+            method: 'POST',
+            url: '/edit?_method=PUT',
+            data: { id: taskId, status: newStatus }
+          }).done(() => { updateCounts(); });
+        }
+      });
+    });
 
-      if(confirm('Delete this task?')) {
-        $.ajax({
-          method: 'DELETE',
-          url: '/delete',
-          data: { _id: id }
-        }).done((res) => {
-          cardWrapper.fadeOut(400, function() {
-            $(this).remove();
-          });
-        }).fail((xhr, code, err) => {
-          alert('Delete failed');
-        });
+    function updateCounts() {
+      document.querySelectorAll('.board-column').forEach(col => {
+        const status = col.querySelector('.task-list').getAttribute('data-status');
+        const count = col.querySelectorAll('.task-card').length;
+        document.getElementById('count-' + status.replace(/\s+/g, '')).innerText = count;
+      });
+    }
+
+    $(document).on('click', '.delete-btn', function() {
+      const id = $(this).data('id');
+      const card = $(this).closest('.task-card');
+      if(confirm('Delete this work item?')) {
+        $.ajax({ method: 'DELETE', url: '/delete', data: { _id: id } })
+        .done(() => { card.fadeOut(200, function() { $(this).remove(); updateCounts(); }); });
       }
     });
   </script>
-
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
 </body>
-
 </html>

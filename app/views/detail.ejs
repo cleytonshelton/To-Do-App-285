@@ -4,12 +4,32 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" />
   <link rel="stylesheet" href="/css/style.css">
-  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
-  <title>Post Detail - Todo App</title>
+  <style>
+    body { background-color: #f4f7f9; font-family: 'Inter', sans-serif; }
+    .detail-card { border: 1px solid #dfe1e5; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); background: white; }
+    .azure-status-pill { font-size: 0.75rem; font-weight: 700; padding: 4px 12px; border-radius: 12px; text-transform: uppercase; }
+    
+    /* Azure Status Colors */
+    .status-Pending { background: #fff4ce; color: #794d00; }
+    .status-In-Progress { background: #c7e0f4; color: #004578; }
+    .status-Completed { background: #dff6dd; color: #107c10; }
+    
+    /* Priority Colors */
+    .prio-text-1 { color: #d13438; } .prio-text-2 { color: #ffb900; }
+    .prio-text-3 { color: #0078d4; } .prio-text-4 { color: #666; }
+
+    .subtask-row { border-bottom: 1px solid #f0f2f5; padding: 10px 0; display: flex; align-items: center; }
+    .subtask-row:last-child { border-bottom: none; }
+    .completed-text { text-decoration: line-through; color: #a1a1a1; }
+    .label-heading { color: #5e6c84; font-size: 0.75rem; font-weight: 700; text-transform: uppercase; margin-bottom: 8px; }
+  </style>
+
+  <title>Detail: <%= data.title %></title>
 </head>
 
 <body>
@@ -17,36 +37,76 @@
 
   <div class="container py-5">
     <div class="row justify-content-center">
-      <div class="col-md-8">
+      <div class="col-md-9">
         
-        <h4 class="mb-4"><strong>Detail Page</strong></h4>
+        <nav aria-label="breadcrumb">
+          <ol class="breadcrumb bg-transparent p-0 mb-4">
+            <li class="breadcrumb-item"><a href="/list" style="color: #0078d4;">Sprint Board</a></li>
+            <li class="breadcrumb-item active">Work Item <%= data._id.toString().slice(-5) %></li>
+          </ol>
+        </nav>
 
-        <div class="card custom-card">
-          <div class="card-body">
-            <div class="d-flex justify-content-between align-items-center mb-3">
-              <h5 class="h3 mb-0 font-weight-bold">
-                <%= data.title %>
-              </h5>
-              
-              <span class="status-badge status-<%= data.status || 'pending' %>">
-                <%= data.status || 'pending' %>
+        <div class="card detail-card">
+          <div class="card-body p-5">
+            
+            <div class="d-flex justify-content-between align-items-start mb-4">
+              <div>
+                <h1 class="display-5 font-weight-bold mb-2"><%= data.title %></h1>
+                <p class="text-muted mb-0">
+                  <i class="far fa-calendar-check mr-2"></i>Due Date: 
+                  <strong><%= data.date ? new Date(data.date).toLocaleString() : 'Unscheduled' %></strong>
+                </p>
+              </div>
+              <span class="azure-status-pill status-<%= (data.status || 'Pending').replace(/\s+/g, '-') %>">
+                <%= data.status || 'Pending' %>
               </span>
             </div>
 
-            <h6 class="text-muted mb-4">
-              <i class="far fa-calendar-alt mr-2"></i><%= data.date %>
-            </h6>
-            
             <hr class="my-4">
 
-            <div class="d-flex">
-              <a href="/edit/<%= data._id %>" class="btn btn-modern btn-primary-modern mr-2">
-                Edit Task
+            <div class="row mb-5">
+              <div class="col-sm-3">
+                <div class="label-heading">Priority</div>
+                <p class="font-weight-bold prio-text-<%= data.priority %>">
+                  <i class="fas fa-circle mr-1" style="font-size: 0.6rem;"></i>
+                  <%= data.priority == 1 ? 'Critical' : data.priority == 2 ? 'High' : data.priority == 3 ? 'Medium' : 'Low' %>
+                </p>
+              </div>
+              <div class="col-sm-3">
+                <div class="label-heading">Area</div>
+                <p>Sprint 1</p>
+              </div>
+              <div class="col-sm-6 text-right">
+                <div class="label-heading">Work Item ID</div>
+                <p class="text-muted">#<%= data._id %></p>
+              </div>
+            </div>
+
+            <div class="mb-5">
+              <div class="label-heading">Subtasks (Child Items)</div>
+              <div class="border rounded px-3 py-2 bg-light">
+                <% if (data.subtasks && data.subtasks.length > 0) { %>
+                  <% data.subtasks.forEach(sub => { %>
+                    <div class="subtask-row">
+                      <i class="<%= sub.completed ? 'fas fa-check-square text-success' : 'far fa-square text-muted' %> mr-3"></i>
+                      <span class="<%= sub.completed ? 'completed-text' : '' %>"><%= sub.title %></span>
+                    </div>
+                  <% }) %>
+                <% } else { %>
+                  <p class="text-muted mb-0 py-2 small">No child items defined for this task.</p>
+                <% } %>
+              </div>
+            </div>
+
+            <div class="d-flex pt-4 border-top">
+              <a href="/edit/<%= data._id %>" class="btn btn-azure-primary px-4 mr-2" style="background-color: #0078d4; color: white;">
+                <i class="fas fa-edit mr-2"></i>Edit Work Item
               </a>
-              <a href="/list" class="btn btn-modern btn-outline-secondary">
-                Back to List
+              <a href="/list" class="btn btn-outline-secondary px-4">
+                Back to Board
               </a>
             </div>
+
           </div>
         </div>
 
@@ -57,5 +117,4 @@
   <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
 </body>
-
 </html>

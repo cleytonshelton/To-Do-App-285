@@ -8,8 +8,15 @@
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" />
   <link rel="stylesheet" href="/css/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
-  <title>Create Task - Todo App</title>
+  <title>Create Work Item - Todo App</title>
+  <style>
+    body { background-color: #f4f7f9; font-family: 'Inter', sans-serif; }
+    .custom-card { border: 1px solid #dfe1e5; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    .subtask-item { background: #fff; border: 1px solid #e9ecef; border-radius: 4px; margin-bottom: 8px; padding: 10px; display: flex; align-items: center; gap: 10px; }
+    .font-weight-600 { font-weight: 600; color: #5e6c84; font-size: 0.85rem; text-transform: uppercase; }
+  </style>
 </head>
 
 <body>
@@ -17,35 +24,73 @@
 
   <div class="container py-5">
     <div class="row justify-content-center">
-      <div class="col-md-8">
+      <div class="col-md-10">
         
-        <h4 class="mb-4"><strong>Create New Task</strong></h4>
+        <h4 class="mb-4"><strong>Create New Work Item</strong></h4>
 
         <div class="card custom-card">
-          <div class="card-body">
+          <div class="card-body p-4">
             <form action="/add" method="POST">
-              <div class="form-group">
-                <label class="font-weight-600">What to do today</label>
-                <input type="text" class="form-control" name="title" placeholder="Enter task name..." required />
+              
+              <div class="form-group mb-4">
+                <label class="font-weight-600">Title</label>
+                <input type="text" class="form-control" name="title" placeholder="What needs to be done?" required />
               </div>
 
-              <div class="form-group">
-                <label class="font-weight-600">Date</label>
-                <input type="text" class="form-control" name="date" placeholder="e.g., Feb 24, 2026" />
+              <div class="row mb-4">
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label class="font-weight-600">Initial Status</label>
+                    <select class="form-control" name="status">
+                      <option value="Pending" selected>To Do</option>
+                      <option value="In Progress">In Progress</option>
+                      <option value="Completed">Done</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label class="font-weight-600">Priority</label>
+                    <select class="form-control" name="priority">
+                      <option value="1">1 - Critical</option>
+                      <option value="2">2 - High</option>
+                      <option value="3" selected>3 - Medium</option>
+                      <option value="4">4 - Low</option>
+                    </select>
+                  </div>
+                </div>
+
+                <div class="col-md-4">
+                  <div class="form-group">
+                    <label class="font-weight-600">Due Date</label>
+                    <input 
+                      type="datetime-local" 
+                      class="form-control" 
+                      name="date" 
+                      id="defaultDate"
+                      required
+                    />
+                  </div>
+                </div>
               </div>
 
+              <hr>
+
               <div class="form-group">
-                <label class="font-weight-600">Initial Status</label>
-                <select class="form-control" name="status">
-                  <option value="Pending" selected>Pending</option>
-                  <option value="In Progress">In Progress</option>
-                  <option value="Completed">Completed</option>
-                </select>
+                <label class="font-weight-600">Subtasks (Child Items)</label>
+                <div id="subtask-list">
+                  </div>
+                <button type="button" id="add-subtask" class="btn btn-sm btn-outline-primary mt-2">
+                  <i class="fas fa-plus mr-1"></i> Add Subtask
+                </button>
               </div>
 
-              <div class="mt-4">
-                <button type="submit" class="btn btn-modern btn-primary-modern mr-2">Create Task</button>
-                <a href="/list" class="btn btn-modern btn-outline-secondary">Cancel</a>
+              <div class="mt-5 border-top pt-4">
+                <button type="submit" class="btn btn-primary px-4" style="background-color: #0078d4; border: none;">
+                  Create Item
+                </button>
+                <a href="/list" class="btn btn-link text-muted">Cancel</a>
               </div>
             </form>
           </div>
@@ -55,8 +100,29 @@
     </div>
   </div>
 
-  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
-  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+  <script>
+    // Set default date to now
+    const now = new Date();
+    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
+    document.getElementById('defaultDate').value = now.toISOString().slice(0, 16);
+
+    // Dynamic Subtask Logic
+    let subCount = 0;
+    $('#add-subtask').click(function() {
+      const row = `
+        <div class="subtask-item">
+          <input type="checkbox" name="subtasks[${subCount}][completed]" value="true" style="display:none;"> <input type="text" name="subtasks[${subCount}][title]" placeholder="Describe child task..." class="form-control form-control-sm border-0" required>
+          <button type="button" class="btn btn-link text-danger remove-subtask p-0"><i class="fas fa-times"></i></button>
+        </div>`;
+      $('#subtask-list').append(row);
+      subCount++;
+    });
+
+    $(document).on('click', '.remove-subtask', function() {
+      $(this).parent().remove();
+    });
+  </script>
 </body>
 
 </html>

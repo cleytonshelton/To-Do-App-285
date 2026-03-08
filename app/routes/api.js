@@ -9,138 +9,119 @@ import express from 'express';
 
 export function createApiRouter(db) {
   const router = express.Router();
-  const COLLECTION = 'posts';
+  const COLLECTION = 'tasks'; // ← updated from 'posts'
 
   /**
-   * GET /api/posts
-   * Retrieve all posts, sorted by _id ascending
+   * GET /api/tasks
+   * Retrieve all tasks, sorted by createdAt ascending
    */
-  router.get('/posts', async (req, res) => {
+  router.get('/tasks', async (req, res) => {
     try {
-      const posts = await db.findAll(COLLECTION, {}, { sort: { _id: 1 } });
-      res.json(posts);
+      const tasks = await db.findAll(COLLECTION, {}, { sort: { createdAt: 1 } });
+      res.json(tasks);
     } catch (error) {
-      console.error('Error fetching posts:', error);
-      res.status(500).json({ error: 'Failed to fetch posts' });
+      console.error('Error fetching tasks:', error);
+      res.status(500).json({ error: 'Failed to fetch tasks' });
     }
   });
 
   /**
-   * GET /api/posts/:id
-   * Retrieve a single post by ID
+   * GET /api/tasks/:id
+   * Retrieve a single task by ID
    */
-  router.get('/posts/:id', async (req, res) => {
+  router.get('/tasks/:id', async (req, res) => {
     try {
-      const id = parseInt(req.params.id, 10);
+      const { id } = req.params;
+      const task = await db.findOne(COLLECTION, { _id: id });
 
-      if (Number.isNaN(id)) {
-        return res.status(400).json({ error: 'Invalid id' });
+      if (!task) {
+        return res.status(404).json({ error: 'Task not found' });
       }
 
-      const post = await db.findOne(COLLECTION, { _id: id });
-
-      if (!post) {
-        return res.status(404).json({ error: 'Post not found' });
-      }
-
-      // FIX: Sanitize single post as well
-      post.status = post.status || 'pending';
-
-      res.json(post);
+      res.json(task);
     } catch (error) {
-      console.error('Error fetching post:', error);
-      res.status(500).json({ error: 'Failed to fetch post' });
+      console.error('Error fetching task:', error);
+      res.status(500).json({ error: 'Failed to fetch task' });
     }
   });
 
   /**
-   * POST /api/posts
+   * POST /api/tasks
+   * Create a new task
    */
-  router.post('/posts', async (req, res) => {
+  router.post('/tasks', async (req, res) => {
     try {
-      // If using standard HTML forms, req.body might need parsing
       const { title, date, status } = req.body || {};
 
       if (!title) {
         return res.status(400).json({ error: 'title is required' });
       }
 
-      const newPost = await db.insertOne(COLLECTION, {
-        title: title,
+      const newTask = await db.insertOne(COLLECTION, {
+        title,
         date: date || '',
-        // Use the incoming status if it exists, otherwise default to pending
-        status: (status && status.trim() !== '') ? status : 'pending'
+        status: (status && status.trim() !== '') ? status : 'Pending', // ← capital P to match enum
       });
 
-      res.status(201).json(newPost);
+      res.status(201).json(newTask);
     } catch (error) {
-      console.error('Error creating post:', error);
-      res.status(500).json({ error: 'Failed to create post' });
+      console.error('Error creating task:', error);
+      res.status(500).json({ error: 'Failed to create task' });
     }
   });
 
   /**
-   * PUT /api/posts/:id
-   * Update an existing post including its status
+   * PUT /api/tasks/:id
+   * Update an existing task
    */
-  router.put('/posts/:id', async (req, res) => {
+  router.put('/tasks/:id', async (req, res) => {
     try {
-      const id = parseInt(req.params.id, 10);
-
-      if (Number.isNaN(id)) {
-        return res.status(400).json({ error: 'Invalid id' });
-      }
-
+      const { id } = req.params;
       const { title, date, status } = req.body || {};
 
       const update = {};
       if (title !== undefined) update.title = title;
       if (date !== undefined) update.date = date;
-      if (status !== undefined) update.status = status; // Added status support
+      if (status !== undefined) update.status = status;
 
       if (Object.keys(update).length === 0) {
         return res.status(400).json({ error: 'No fields to update' });
       }
 
-      const updatedPost = await db.updateOne(
+      const updatedTask = await db.updateOne(
         COLLECTION,
         { _id: id },
         update
       );
 
-      if (!updatedPost) {
-        return res.status(404).json({ error: 'Post not found' });
+      if (!updatedTask) {
+        return res.status(404).json({ error: 'Task not found' });
       }
 
-      res.json(updatedPost);
+      res.json(updatedTask);
     } catch (error) {
-      console.error('Error updating post:', error);
-      res.status(500).json({ error: 'Failed to update post' });
+      console.error('Error updating task:', error);
+      res.status(500).json({ error: 'Failed to update task' });
     }
   });
 
   /**
-   * DELETE /api/posts/:id
-   * Delete a post by ID
+   * DELETE /api/tasks/:id
+   * Delete a task by ID
    */
-  router.delete('/posts/:id', async (req, res) => {
+  router.delete('/tasks/:id', async (req, res) => {
     try {
-      const id = parseInt(req.params.id, 10);
-
-      if (Number.isNaN(id)) {
-        return res.status(400).json({ error: 'Invalid id' });
-      }
-
+      const { id } = req.params;
       const deleted = await db.deleteOne(COLLECTION, { _id: id });
 
       if (!deleted) {
-        return res.status(404).json({ error: 'Post not found' });
+        return res.status(404).json({ error: 'Task not found' });
       }
 
       res.json({ ok: true, deletedId: id });
     } catch (error) {
-      console.error('Error deleting post:', error);
-      res.status(500).json({ error: 'Failed to delete post' });
+      console.error('Error deleting task:', error);
+      res.status(500).json({ error: 'Failed to delete task' });
     }
   });
 

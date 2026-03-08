@@ -1,43 +1,52 @@
-
 /**
- * MongoDB Adapter for ORDB
+ * Mongoose Adapter for ORDB
  * 
  * Implements the ORDB interface for MongoDB database operations.
- * Uses the native MongoDB Node.js driver.
+ * Uses Mongoose ODM with defined schemas.
  */
 
-import { MongoClient, ServerApiVersion } from 'mongodb';
+import mongoose from 'mongoose';
 import { ORDB } from './ordb.js';
+import Task from './models/Task.js';
 
-export class MongoDBAdapter extends ORDB {
+const MODELS = {
+  tasks: Task,
+};
+
+function getModel(collection) {
+  const model = MODELS[collection];
+  if (!model) {
+    throw new Error(
+      `No Mongoose model registered for collection "${collection}". ` +
+      `Add it to the MODELS registry in mongoose-adapter.js.`
+    );
+  }
+  return model;
+}
+
+// ── Adapter ────────────────────────────────────────────────────────────────────
+export class MongooseAdapter extends ORDB {
   constructor(uri, databaseName) {
     super();
     this.uri = uri;
     this.databaseName = databaseName;
-    this.client = null;
-    this.db = null;
   }
 
   /**
-   * Connect to MongoDB
+   * Connect to MongoDB via Mongoose
    */
   async connect() {
     try {
-      console.log("URI")
-      console.log(this.uri)
-      this.client = new MongoClient(this.uri, {
-        serverApi: {
-          version: ServerApiVersion.v1,
-          strict: true,
-          deprecationErrors: true,
-        }
+      console.log('URI');
+      console.log(this.uri);
+
+      await mongoose.connect(this.uri, {
+        dbName: this.databaseName,
       });
-      
-      await this.client.connect();
-      this.db = this.client.db(this.databaseName);
-      console.log('MongoDB connected successfully');
+
+      console.log('Mongoose connected successfully');
     } catch (error) {
-      console.error('MongoDB connection error:', error);
+      console.error('Mongoose connection error:', error);
       throw error;
     }
   }
@@ -46,51 +55,43 @@ export class MongoDBAdapter extends ORDB {
    * Disconnect from MongoDB
    */
   async disconnect() {
-    if (this.client) {
-      await this.client.close();
-      console.log('MongoDB disconnected');
-    }
+    await mongoose.disconnect();
+    console.log('Mongoose disconnected');
   }
 
   /**
    * Find all documents in a collection
    */
   async findAll(collection, filter = {}, options = {}) {
-    const coll = this.db.collection(collection);
-    let query = coll.find(filter);
-    
-    // Apply sort if provided
+    const Model = getModel(collection);
+    let query = Model.find(filter);
+
     if (options.sort) {
       query = query.sort(options.sort);
     }
-    
-    // Apply limit if provided
+
     if (options.limit) {
       query = query.limit(options.limit);
     }
-    
-    return await query.toArray();
+
+    return await query.lean();
   }
 
   /**
    * Find one document by filter
    */
   async findOne(collection, filter) {
-    return await this.db.collection(collection).findOne(filter);
+    const Model = getModel(collection);
+    return await Model.findOne(filter).lean();
   }
 
   /**
    * Insert a new document
-   * If data includes _id, use it; otherwise generate next ID
    */
   async insertOne(collection, data) {
-    // If _id is not provided, generate next ID
-    if (!data._id) {
-      data._id = await this.getNextId(collection);
-    }
-    
-    await this.db.collection(collection).insertOne(data);
-    return data;
+    const Model = getModel(collection);
+    const doc = await Model.create(data);
+    return doc.toObject();
   }
 
   /**
@@ -98,13 +99,15 @@ export class MongoDBAdapter extends ORDB {
    * Returns the updated document
    */
   async updateOne(collection, filter, update) {
-    const result = await this.db.collection(collection).findOneAndUpdate(
-      filter,
-      { $set: update },
-      { returnDocument: 'after' }
-    );
+    const Model = getModel(collection);
+    // If the update object doesn't start with $, wrap it in $set for safety
+    const finalUpdate = Object.keys(update)[0].startsWith('$') ? update : { $set: update };
     
-    return result.value;
+    return await Model.findOneAndUpdate(
+      filter,
+      finalUpdate,
+      { new: true, lean: true, runValidators: true }
+    );
   }
 
   /**
@@ -112,31 +115,17 @@ export class MongoDBAdapter extends ORDB {
    * Returns true if deleted, false if not found
    */
   async deleteOne(collection, filter) {
-    const result = await this.db.collection(collection).deleteOne(filter);
+    const Model = getModel(collection);
+    const result = await Model.deleteOne(filter);
     return result.deletedCount > 0;
-  }
-
-  /**
-   * Get next auto-increment ID
-   * Finds the highest numeric _id and adds 1
-   */
-  async getNextId(collection) {
-    const coll = this.db.collection(collection);
-    const lastDoc = await coll
-      .find({ _id: { $type: 'int' } })
-      .sort({ _id: -1 })
-      .limit(1)
-      .toArray();
-    
-    return lastDoc.length > 0 ? lastDoc[0]._id + 1 : 1;
   }
 
   /**
    * Get the database type name
    */
   getType() {
-    return 'MongoDB';
+    return 'Mongoose';
   }
 }
 
-export default MongoDBAdapter;
+export default MongooseAdapter;
