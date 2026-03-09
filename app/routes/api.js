@@ -1,130 +1,161 @@
 /**
- * Unified API Routes using ORDB
+ * API Routes - Express Router for Task CRUD Operations
+ *
+ * Handles all task-related API endpoints.
+ * Works with any database through the ORDB abstraction layer.
  */
 
 import express from 'express';
 
+const COLLECTION = 'tasks';
+
+/**
+ * Normalizes a task payload from a request body.
+ * @param {Object} body - Raw request body
+ * @param {boolean} [requireTitle=false] - Whether to enforce title presence
+ * @returns {{ data: Object|null, error: string|null }}
+ */
+function parseTaskBody(body = {}, requireTitle = false) {
+  const { title, date, status, priority, subtasks } = body;
+
+  if (requireTitle && !title?.trim()) {
+    return { data: null, error: 'title is required' };
+  }
+
+  return {
+    error: null,
+    data: {
+      ...(title    !== undefined && { title }),
+      ...(date     !== undefined && { date: date || null }),
+      ...(status   !== undefined && { status: status?.trim() || 'Pending' }),
+      ...(priority !== undefined && { priority: parseInt(priority) }),
+      ...(subtasks !== undefined && { subtasks: Array.isArray(subtasks) ? subtasks : [] }),
+    },
+  };
+}
+
+/**
+ * Creates and configures the API router.
+ * @param {Object} db - Database instance (ORDB bridge)
+ * @returns {express.Router} Configured Express router
+ */
 export function createApiRouter(db) {
   const router = express.Router();
-  const COLLECTION = 'tasks';
+
+  // ─── Create ───────────────────────────────────────────────────────────────
+
+  /**
+   * POST /api/tasks
+   * Creates a new task. Title is required.
+   */
+  router.post('/tasks', async (req, res) => {
+    const { data, error } = parseTaskBody(req.body, true);
+    if (error) return res.status(400).json({ error });
+
+    try {
+      const task = await db.insertOne(COLLECTION, {
+        title:    data.title,
+        date:     data.date     ?? null,
+        status:   data.status   ?? 'Pending',
+        priority: data.priority ?? 3,
+        subtasks: data.subtasks ?? [],
+      });
+      res.status(201).json(task);
+    } catch (err) {
+      console.error('Error creating task:', err);
+      res.status(500).json({ error: 'Failed to create task' });
+    }
+  });
+
+  // ─── Read ─────────────────────────────────────────────────────────────────
 
   /**
    * GET /api/tasks
+   * Returns all tasks sorted by priority then creation date.
    */
-  router.get('/tasks', async (req, res) => {
+  router.get('/tasks', async (_req, res) => {
     try {
-      // Sorting by Priority (1-Critical first) then by Date
       const tasks = await db.findAll(COLLECTION, {}, { sort: { priority: 1, createdAt: 1 } });
       res.json(tasks);
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
+    } catch (err) {
+      console.error('Error fetching tasks:', err);
       res.status(500).json({ error: 'Failed to fetch tasks' });
     }
   });
 
   /**
-   * POST /api/tasks
-   * Create a new task with priority and subtasks
+   * GET /api/tasks/:id
+   * Returns a single task by ID.
    */
-  router.post('/tasks', async (req, res) => {
+  router.get('/tasks/:id', async (req, res) => {
     try {
-      const { title, date, status, priority, subtasks } = req.body || {};
-
-      if (!title) {
-        return res.status(400).json({ error: 'title is required' });
-      }
-
-      const newTask = await db.insertOne(COLLECTION, {
-        title,
-        date: date || null,
-        status: (status && status.trim() !== '') ? status : 'Pending',
-        priority: priority ? parseInt(priority) : 3, // Default to Medium (3)
-        subtasks: Array.isArray(subtasks) ? subtasks : [] // Expecting array from JSON
-      });
-
-      res.status(201).json(newTask);
-    } catch (error) {
-      console.error('Error creating task:', error);
-      res.status(500).json({ error: 'Failed to create task' });
+      const task = await db.findOne(COLLECTION, { _id: req.params.id });
+      if (!task) return res.status(404).json({ error: 'Task not found' });
+      res.json(task);
+    } catch (err) {
+      console.error('Error fetching task:', err);
+      res.status(500).json({ error: 'Failed to fetch task' });
     }
   });
 
+  // ─── Update ───────────────────────────────────────────────────────────────
+
   /**
    * PUT /api/tasks/:id
-   * Update an existing task including subtasks and priority
+   * Updates a task's fields. At least one field must be provided.
    */
   router.put('/tasks/:id', async (req, res) => {
+    const { data, error } = parseTaskBody(req.body);
+    if (error) return res.status(400).json({ error });
+    if (Object.keys(data).length === 0) {
+      return res.status(400).json({ error: 'No fields to update' });
+    }
+
     try {
-      const { id } = req.params;
-      const { title, date, status, priority, subtasks } = req.body || {};
-
-      const update = {};
-      if (title !== undefined) update.title = title;
-      if (date !== undefined) update.date = date || null;
-      if (status !== undefined) update.status = status;
-      if (priority !== undefined) update.priority = parseInt(priority);
-      if (subtasks !== undefined) update.subtasks = Array.isArray(subtasks) ? subtasks : [];
-
-      if (Object.keys(update).length === 0) {
-        return res.status(400).json({ error: 'No fields to update' });
-      }
-
-      const updatedTask = await db.updateOne(
-        COLLECTION,
-        { _id: id },
-        update
-      );
-
-      if (!updatedTask) {
-        return res.status(404).json({ error: 'Task not found' });
-      }
-
-      res.json(updatedTask);
-    } catch (error) {
-      console.error('Error updating task:', error);
+      const task = await db.updateOne(COLLECTION, { _id: req.params.id }, data);
+      if (!task) return res.status(404).json({ error: 'Task not found' });
+      res.json(task);
+    } catch (err) {
+      console.error('Error updating task:', err);
       res.status(500).json({ error: 'Failed to update task' });
     }
   });
 
   /**
-   * PUT /tasks/:id/subtask/:index - Toggle subtask status (AJAX)
+   * PUT /api/tasks/:id/subtasks/:index
+   * Toggles the completed state of a single subtask.
    */
-  router.put('/tasks/:id/subtask/:index', async (req, res) => {
+  router.put('/tasks/:id/subtasks/:index', async (req, res) => {
+    const { id, index } = req.params;
+    const completed = req.body.completed === 'true' || req.body.completed === true;
+
     try {
-      const { id, index } = req.params;
-      const { completed } = req.body;
-
-      // Construct the positional update path for Mongoose/MongoDB
-      const updatePath = `subtasks.${index}.completed`;
-
-      // Use the ORDB bridge to update the specific sub-document field
-      const updatedTask = await db.updateOne(
+      const task = await db.updateOne(
         COLLECTION,
         { _id: id },
-        { [updatePath]: completed === 'true' || completed === true }
+        { [`subtasks.${index}.completed`]: completed }
       );
-
-      if (!updatedTask) {
-        return res.status(404).json({ error: 'Task not found' });
-      }
-
-      res.json({ ok: true, updatedTask });
-    } catch (error) {
-      console.error('Error toggling subtask:', error);
+      if (!task) return res.status(404).json({ error: 'Task not found' });
+      res.json({ ok: true, task });
+    } catch (err) {
+      console.error('Error toggling subtask:', err);
       res.status(500).json({ error: 'Failed to toggle subtask' });
     }
   });
 
+  // ─── Delete ───────────────────────────────────────────────────────────────
+
   /**
-   * DELETE /api/tasks/:id (Remains unchanged)
+   * DELETE /api/tasks/:id
+   * Deletes a task by ID.
    */
   router.delete('/tasks/:id', async (req, res) => {
     try {
-      const { id } = req.params;
-      const deleted = await db.deleteOne(COLLECTION, { _id: id });
+      const deleted = await db.deleteOne(COLLECTION, { _id: req.params.id });
       if (!deleted) return res.status(404).json({ error: 'Task not found' });
-      res.json({ ok: true, deletedId: id });
-    } catch (error) {
+      res.json({ ok: true, deletedId: req.params.id });
+    } catch (err) {
+      console.error('Error deleting task:', err);
       res.status(500).json({ error: 'Failed to delete task' });
     }
   });

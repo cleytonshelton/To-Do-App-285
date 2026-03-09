@@ -1,211 +1,159 @@
 /**
  * View Routes - Express Router for EJS Templates
- * 
- * This router handles all view-related routes that render EJS templates.
- * It works with any database through the ORDB abstraction layer.
+ *
+ * Handles all view-related routes that render EJS templates.
+ * Works with any database through the ORDB abstraction layer.
  */
 
 import express from 'express';
 
+const COLLECTION = 'tasks';
+
 /**
- * Create and configure the view router
+ * Parses subtasks from a form submission body.
+ * @param {Object} subtasks - Raw subtasks from req.body
+ * @param {boolean} [withCompleted=false] - Whether to include the completed field
+ * @returns {Array} Parsed subtask array
+ */
+function parseSubtasks(subtasks, withCompleted = false) {
+  if (!subtasks) return [];
+  return Object.values(subtasks).map(sub =>
+    withCompleted
+      ? { title: sub.title, completed: sub.completed === 'true' || sub.completed === true }
+      : sub
+  );
+}
+
+/**
+ * Creates and configures the view router.
  * @param {Object} db - Database instance (ORDB bridge)
  * @returns {express.Router} Configured Express router
  */
 export function createRouter(db) {
   const router = express.Router();
-  const COLLECTION = 'tasks'; // ← updated from 'posts'
 
-  /**
-   * GET / - Home page
-   */
-  router.get('/', (req, res) => {
-    res.render('home.ejs');
-  });
+  // ─── Pages ────────────────────────────────────────────────────────────────
 
-  /**
-   * GET /write - Write form page
-   */
-  router.get('/write', (req, res) => {
-    res.render('write.ejs');
-  });
+  router.get('/', (_req, res) => res.render('home.ejs'));
 
-  /**
-   * POST /add - Create a new task from form submission
-   */
-  router.post('/add', async (req, res) => {
-    try {
-      const { title, date, status, priority, subtasks } = req.body;
-      const subtaskList = subtasks ? Object.values(subtasks) : [];
+  router.get('/write', (_req, res) => res.render('write.ejs'));
 
-      await db.insertOne(COLLECTION, {
-        title: title || '',
-        date: date || null,
-        status: status || 'Pending',
-        priority: parseInt(priority) || 3,
-        subtasks: subtaskList
-      });
+  router.get('/calendar', (_req, res) => res.render('calendar.ejs'));
 
-      res.redirect('/list');
-    } catch (error) {
-      console.error('Error adding task:', error);
-      res.status(500).send('Failed to add task');
-    }
-  });
+  router.get('/dashboard', (_req, res) => res.render('dashboard.ejs'));
 
-  /**
-   * GET /list - Display all tasks
-   */
-  router.get('/list', async (req, res) => {
+  // ─── Tasks ────────────────────────────────────────────────────────────────
+
+  router.get('/list', async (_req, res) => {
     try {
       const tasks = await db.findAll(COLLECTION, {}, { sort: { createdAt: 1 } });
-      res.render('list.ejs', { posts: tasks }); // keep 'posts' key if EJS templates use it
-    } catch (error) {
-      console.error('Error fetching tasks:', error);
+      res.render('list.ejs', { posts: tasks });
+    } catch (err) {
+      console.error('Error fetching tasks:', err);
       res.status(500).send('Failed to fetch tasks');
     }
   });
 
-  /**
-   * GET /detail/:id - Display single task detail
-   */
+  router.get('/listjson', async (_req, res) => {
+    try {
+      const tasks = await db.findAll(COLLECTION);
+      res.json(tasks);
+    } catch (err) {
+      console.error('Error fetching tasks as JSON:', err);
+      res.status(500).json({ error: 'Failed to fetch tasks' });
+    }
+  });
+
   router.get('/detail/:id', async (req, res) => {
     try {
-      const { id } = req.params;
-      const data = await db.findOne(COLLECTION, { _id: id });
-
-      if (data) {
-        res.render('detail.ejs', { data });
-      } else {
-        res.status(404).send('Task not found');
-      }
-    } catch (error) {
-      console.error('Error fetching detail:', error);
+      const data = await db.findOne(COLLECTION, { _id: req.params.id });
+      if (!data) return res.status(404).send('Task not found');
+      res.render('detail.ejs', { data });
+    } catch (err) {
+      console.error('Error fetching task detail:', err);
       res.status(500).send('Error fetching task detail');
     }
   });
 
-  /**
-   * GET /edit/:id - Display edit form for a task
-   */
+  router.post('/add', async (req, res) => {
+    try {
+      const { title, date, status, priority, subtasks } = req.body;
+      await db.insertOne(COLLECTION, {
+        title:    title    || '',
+        date:     date     || null,
+        status:   status   || 'Pending',
+        priority: parseInt(priority) || 3,
+        subtasks: parseSubtasks(subtasks),
+      });
+      res.redirect('/list');
+    } catch (err) {
+      console.error('Error adding task:', err);
+      res.status(500).send('Failed to add task');
+    }
+  });
+
   router.get('/edit/:id', async (req, res) => {
     try {
-      const { id } = req.params;
-      const data = await db.findOne(COLLECTION, { _id: id });
-
-      if (data) {
-        res.render('edit.ejs', { data });
-      } else {
-        res.status(404).send('Task not found');
-      }
-    } catch (error) {
-      console.error('Error fetching edit form:', error);
+      const data = await db.findOne(COLLECTION, { _id: req.params.id });
+      if (!data) return res.status(404).send('Task not found');
+      res.render('edit.ejs', { data });
+    } catch (err) {
+      console.error('Error fetching task for editing:', err);
       res.status(500).send('Error fetching task for editing');
     }
   });
 
-  /**
-   * PUT /edit - Update a task from form submission
-   */
   router.put('/edit', async (req, res) => {
     try {
       const { id, title, date, status, priority, subtasks } = req.body;
 
-      // Create an update object containing ONLY the fields that were sent
-      const updateData = {};
-      if (title !== undefined) updateData.title = title;
-      if (date !== undefined) updateData.date = date;
-      if (status !== undefined) updateData.status = status;
-      if (priority !== undefined) updateData.priority = parseInt(priority);
+      const updateData = {
+        ...(title    !== undefined && { title }),
+        ...(date     !== undefined && { date }),
+        ...(status   !== undefined && { status }),
+        ...(priority !== undefined && { priority: parseInt(priority) }),
+        ...(subtasks !== undefined && { subtasks: parseSubtasks(subtasks, true) }),
+      };
 
-      // Handle Subtasks if they exist in the request
-      if (subtasks !== undefined) {
-        updateData.subtasks = Object.values(subtasks).map(sub => ({
-          title: sub.title,
-          completed: sub.completed === 'true' || sub.completed === true
-        }));
-      }
+      await db.updateOne(COLLECTION, { _id: id }, updateData);
 
-      await db.updateOne(
-        COLLECTION,
-        { _id: id },
-        updateData // This only updates what is present in updateData
-      );
-
-      // If it's an AJAX request (like your drag-and-drop), return JSON
-      if (req.xhr || req.headers.accept.indexOf('json') > -1) {
-        return res.json({ ok: true });
-      }
-
-      // Otherwise, redirect (for the standard Edit Form)
-      res.redirect('/list');
-    } catch (error) {
-      console.error('Update error:', error);
+      const isAjax = req.xhr || req.headers.accept?.includes('json');
+      return isAjax ? res.json({ ok: true }) : res.redirect('/list');
+    } catch (err) {
+      console.error('Error updating task:', err);
       res.status(500).send('Failed to update task');
     }
   });
 
-  /**
-   * PUT /tasks/:id/subtask/:index - Toggle subtask status (AJAX)
-   */
   router.put('/tasks/:id/subtask/:index', async (req, res) => {
     try {
       const { id, index } = req.params;
-      const { completed } = req.body;
+      const completed = req.body.completed === 'true' || req.body.completed === true;
 
-      // Construct the positional update path for Mongoose/MongoDB
-      const updatePath = `subtasks.${index}.completed`;
-
-      // Use the ORDB bridge to update the specific sub-document field
       const updatedTask = await db.updateOne(
         COLLECTION,
         { _id: id },
-        { [updatePath]: completed === 'true' || completed === true }
+        { [`subtasks.${index}.completed`]: completed }
       );
 
-      if (!updatedTask) {
-        return res.status(404).json({ error: 'Task not found' });
-      }
-
+      if (!updatedTask) return res.status(404).json({ error: 'Task not found' });
       res.json({ ok: true, updatedTask });
-    } catch (error) {
-      console.error('Error toggling subtask:', error);
+    } catch (err) {
+      console.error('Error toggling subtask:', err);
       res.status(500).json({ error: 'Failed to toggle subtask' });
     }
   });
 
-
-  /**
-   * DELETE /delete - Delete a task (AJAX request)
-   */
   router.delete('/delete', async (req, res) => {
     try {
       const { _id } = req.body;
-
       const deleted = await db.deleteOne(COLLECTION, { _id });
-
-      if (!deleted) {
-        return res.status(404).json({ error: 'Task not found' });
-      }
-
+      if (!deleted) return res.status(404).json({ error: 'Task not found' });
       res.json({ ok: true, deletedId: _id });
-    } catch (error) {
-      console.error('Error deleting task:', error);
+    } catch (err) {
+      console.error('Error deleting task:', err);
       res.status(500).json({ error: 'Failed to delete task' });
     }
-  });
-
-  router.get('/listjson', async (req, res) => {
-    const tasks = await db.findAll('tasks');
-    res.json(tasks);
-  });
-
-  router.get('/calendar', function (req, resp) {
-    resp.render('calendar.ejs');
-  });
-
-  router.get('/dashboard', async (req, res) => {
-    res.render('dashboard.ejs');
   });
 
   return router;
