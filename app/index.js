@@ -69,15 +69,4 @@ process.on('SIGTERM', async () => {
   process.exit(0);
 });
 
-// API for JSON
-
-app.get('/listjson', async (req, res) => {
-  const posts = await db.findAll('posts');
-  res.json(posts);
-});
-
-app.get('/calendar', function (req, resp) {
-  resp.render('calendar.ejs');
-});
-
 startServer();

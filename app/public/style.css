@@ -1,4 +1,4 @@
-/* Core Variables for easy color swapping */
+/* ── universal styles ──────────────────────────────────────────────── */
 :root {
   --bg-body: #f8fafc;
   --text-main: #1e293b;
@@ -121,6 +121,37 @@ body {
   align-items: center;
 }
 
+/* ── Calendar ──────────────────────────────────────────────── */
+
+/* Calendar Task Styling */
+.task {
+    font-size: 0.75rem;
+    padding: 2px 4px;
+    margin-top: 2px;
+    border-radius: 3px;
+    color: white; /* Contrast for the background colors */
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+
+/* Priority Background Colors */
+.prio-1 { background-color: #d13438 !important; } /* Critical */
+.prio-2 { background-color: #ffb900 !important; color: #333 !important; } /* High */
+.prio-3 { background-color: #0078d4 !important; } /* Medium/Azure */
+.prio-4 { background-color: #ccc !important; color: #333 !important; } /* Low */
+
+/* Ensure In-Progress tasks stay visible and distinct */
+.status-in-progress {
+    border: 1px solid rgba(255,255,255,0.5);
+    font-weight: 600;
+}
+
+/* Completed tasks */
+.status-completed {
+    background-color: #107c10 !important; /* Azure Green for Done */
+    color: white !important;
+}
 
 .calendar-grid {
   display: grid;
@@ -128,8 +159,27 @@ body {
   gap: 1px;
   background-color: #e2e8f0; /* Border color */
   border: 1px solid #e2e8f0;
-  border-radius: 8px;
   overflow: hidden;
+  text-align: center;
+  align-items: center;
+}
+
+.calendar-title {
+  font-size: 1.2rem;
+  font-weight: 700;
+}
+
+.cal-nav {
+  background: none;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 4px 12px;
+  cursor: pointer;
+  font-size: 1rem;
+}
+
+.cal-nav:hover {
+  background-color: #f0f0f0;
 }
 
 .day {
@@ -153,3 +203,177 @@ body {
   overflow: hidden;
   text-overflow: ellipsis;
 }
+
+/* ── Dashboard ──────────────────────────────────────────────── */
+
+    .dashboard-header {
+      padding: 48px 0 32px;
+    }
+
+    /* ── Stat Cards ──────────────────────────────────────────────── */
+    .stat-card {
+      border-radius: 16px;
+      padding: 1.5rem;
+      background: var(--card-bg);
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -1px rgba(0,0,0,0.04);
+      border-left: 4px solid transparent;
+      transition: transform 0.2s ease, box-shadow 0.2s ease;
+      height: 100%;
+    }
+
+    .stat-card:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+    }
+
+    .stat-card.pending  { border-left-color: #0ea5e9; }
+    .stat-card.progressCard { border-left-color: #f59e0b; }
+    .stat-card.done     { border-left-color: #10b981; }
+    .stat-card.total    { border-left-color: var(--primary); }
+
+    .stat-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 1rem;
+      font-size: 1.2rem;
+    }
+
+    .stat-icon.pending  { background: var(--status-pending-bg);   color: var(--status-pending-text); }
+    .stat-icon.progress { background: var(--status-progress-bg);  color: var(--status-progress-text); }
+    .stat-icon.done     { background: var(--status-completed-bg); color: var(--status-completed-text); }
+    .stat-icon.total    { background: #ede9fe; color: var(--primary); }
+
+    .stat-number {
+      font-size: 2.4rem;
+      font-weight: 700;
+      line-height: 1;
+      margin-bottom: 0.25rem;
+      color: var(--text-main);
+    }
+
+    .stat-label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .stat-sub {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 0.4rem;
+    }
+
+    /* ── Progress Bar ────────────────────────────────────────────── */
+    .progress-section {
+      background: var(--card-bg);
+      border-radius: 16px;
+      padding: 1.5rem;
+      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.07);
+      margin-bottom: 2rem;
+    }
+
+    .progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--text-muted);
+      margin-bottom: 0.5rem;
+    }
+
+    progress {
+      width: 100%;
+      height: 12px;
+      border-radius: 9999px;
+      overflow: hidden;
+      background-color: #e2e8f0;
+    }
+
+    .progress-bar {
+      border-radius: 9999px;
+      transition: width 0.6s ease;
+    }
+
+    .progress-bar.pending  { background: #0ea5e9; }
+    .progress-bar.progressCard { background: #f59e0b; }
+    .progress-bar.done     { background: #10b981; }
+
+    /* ── Recent Tasks Table ──────────────────────────────────────── */
+    .section-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text-main);
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: #e2e8f0;
+    }
+
+    .task-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0.85rem 1rem;
+      border-radius: 10px;
+      background: #f8fafc;
+      margin-bottom: 0.5rem;
+      transition: background 0.15s;
+    }
+
+    .task-row:hover {
+      background: #f1f5f9;
+    }
+
+    .task-row-title {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--text-main);
+    }
+
+    .task-row-date {
+      font-size: 0.78rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .empty-state {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+
+    /* ── Month Selector ──────────────────────────────────────────── */
+    .month-selector {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: var(--card-bg);
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 0.4rem 0.75rem;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
+    .month-selector select {
+      border: none;
+      background: transparent;
+      font-weight: 600;
+      color: var(--text-main);
+      outline: none;
+      cursor: pointer;
+    }

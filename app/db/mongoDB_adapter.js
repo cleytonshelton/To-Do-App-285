@@ -1,142 +1,88 @@
-
 /**
- * MongoDB Adapter for ORDB
- * 
- * Implements the ORDB interface for MongoDB database operations.
- * Uses the native MongoDB Node.js driver.
+ * Mongoose Adapter for ORDB
+ *
+ * Implements the ORDB interface for MongoDB via Mongoose ODM.
  */
 
-import { MongoClient, ServerApiVersion } from 'mongodb';
+import mongoose from 'mongoose';
 import { ORDB } from './ordb.js';
+import Task from './models/Task.js';
 
-export class MongoDBAdapter extends ORDB {
+const MODELS = {
+  tasks: Task,
+};
+
+function getModel(collection) {
+  const model = MODELS[collection];
+  if (!model) {
+    throw new Error(
+      `No Mongoose model registered for collection "${collection}". ` +
+      `Add it to the MODELS registry in mongoose-adapter.js.`
+    );
+  }
+  return model;
+}
+
+function wrapUpdate(update) {
+  return Object.keys(update)[0].startsWith('$') ? update : { $set: update };
+}
+
+// ── Adapter ────────────────────────────────────────────────────────────────────
+
+export class MongooseAdapter extends ORDB {
   constructor(uri, databaseName) {
     super();
     this.uri = uri;
     this.databaseName = databaseName;
-    this.client = null;
-    this.db = null;
   }
 
-  /**
-   * Connect to MongoDB
-   */
   async connect() {
     try {
-      console.log("URI")
-      console.log(this.uri)
-      this.client = new MongoClient(this.uri, {
-        serverApi: {
-          version: ServerApiVersion.v1,
-          strict: true,
-          deprecationErrors: true,
-        }
-      });
-      
-      await this.client.connect();
-      this.db = this.client.db(this.databaseName);
-      console.log('MongoDB connected successfully');
-    } catch (error) {
-      console.error('MongoDB connection error:', error);
-      throw error;
+      await mongoose.connect(this.uri, { dbName: this.databaseName });
+      console.log(`Mongoose connected to "${this.databaseName}"`);
+    } catch (err) {
+      console.error('Mongoose connection error:', err);
+      throw err;
     }
   }
 
-  /**
-   * Disconnect from MongoDB
-   */
   async disconnect() {
-    if (this.client) {
-      await this.client.close();
-      console.log('MongoDB disconnected');
-    }
+    await mongoose.disconnect();
+    console.log('Mongoose disconnected');
   }
 
-  /**
-   * Find all documents in a collection
-   */
   async findAll(collection, filter = {}, options = {}) {
-    const coll = this.db.collection(collection);
-    let query = coll.find(filter);
-    
-    // Apply sort if provided
-    if (options.sort) {
-      query = query.sort(options.sort);
-    }
-    
-    // Apply limit if provided
-    if (options.limit) {
-      query = query.limit(options.limit);
-    }
-    
-    return await query.toArray();
+    let query = getModel(collection).find(filter);
+    if (options.sort)  query = query.sort(options.sort);
+    if (options.limit) query = query.limit(options.limit);
+    return query.lean();
   }
 
-  /**
-   * Find one document by filter
-   */
   async findOne(collection, filter) {
-    return await this.db.collection(collection).findOne(filter);
+    return getModel(collection).findOne(filter).lean();
   }
 
-  /**
-   * Insert a new document
-   * If data includes _id, use it; otherwise generate next ID
-   */
   async insertOne(collection, data) {
-    // If _id is not provided, generate next ID
-    if (!data._id) {
-      data._id = await this.getNextId(collection);
-    }
-    
-    await this.db.collection(collection).insertOne(data);
-    return data;
+    const doc = await getModel(collection).create(data);
+    return doc.toObject();
   }
 
-  /**
-   * Update one document
-   * Returns the updated document
-   */
   async updateOne(collection, filter, update) {
-    const result = await this.db.collection(collection).findOneAndUpdate(
+    return getModel(collection).findOneAndUpdate(
       filter,
-      { $set: update },
-      { returnDocument: 'after' }
+      wrapUpdate(update),
+      { new: true, lean: true, runValidators: true }
     );
-    
-    return result.value;
   }
 
-  /**
-   * Delete one document
-   * Returns true if deleted, false if not found
-   */
   async deleteOne(collection, filter) {
-    const result = await this.db.collection(collection).deleteOne(filter);
-    return result.deletedCount > 0;
+    const { deletedCount } = await getModel(collection).deleteOne(filter);
+    return deletedCount > 0;
   }
 
-  /**
-   * Get next auto-increment ID
-   * Finds the highest numeric _id and adds 1
-   */
-  async getNextId(collection) {
-    const coll = this.db.collection(collection);
-    const lastDoc = await coll
-      .find({ _id: { $type: 'int' } })
-      .sort({ _id: -1 })
-      .limit(1)
-      .toArray();
-    
-    return lastDoc.length > 0 ? lastDoc[0]._id + 1 : 1;
-  }
-
-  /**
-   * Get the database type name
-   */
   getType() {
-    return 'MongoDB';
+    return 'Mongoose';
   }
 }
 
-export default MongoDBAdapter;
+export default MongooseAdapter;
