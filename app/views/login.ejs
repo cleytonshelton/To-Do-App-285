@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Login | Todo App</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { 
+            background-color: #f4f7f9; 
+            font-family: 'Inter', sans-serif; 
+            height: 100vh; 
+            display: flex; 
+            align-items: center; 
+        }
+        .login-container { 
+            max-width: 400px; 
+            width: 100%; 
+            margin: auto; 
+            background: white; 
+            padding: 40px; 
+            border-radius: 4px; 
+            box-shadow: 0 4px 12px rgba(0,0,0,0.08); 
+            border: 1px solid #dfe1e5;
+        }
+        h2 { 
+            font-weight: 700; 
+            letter-spacing: -1px; 
+            margin-bottom: 8px; 
+            text-align: center; 
+            color: #201f1e;
+        }
+        .subtitle {
+            text-align: center;
+            color: #605e5c;
+            font-size: 0.9rem;
+            margin-bottom: 30px;
+        }
+        .form-group label { 
+            font-weight: 600; 
+            font-size: 0.75rem; 
+            text-transform: uppercase; 
+            color: #5e6c84; 
+            letter-spacing: 0.5px;
+        }
+        .form-control {
+            border-radius: 2px;
+            border: 1px solid #8a8886;
+        }
+        .form-control:focus {
+            border-color: #0078d4;
+            box-shadow: none;
+        }
+        .error { 
+            color: #d13438; 
+            font-size: 0.8rem; 
+            margin-top: 5px; 
+            min-height: 1.2rem; 
+            font-weight: 500;
+        }
+        #submit-btn { 
+            background: #0078d4; 
+            color: white; 
+            border: none; 
+            width: 100%; 
+            padding: 10px; 
+            border-radius: 2px; 
+            font-weight: 600; 
+            margin-top: 10px;
+            transition: background 0.2s;
+        }
+        #submit-btn:hover { background: #005a9e; }
+        #submit-btn:disabled { background: #c8c6c4; cursor: not-allowed; }
+        
+        .signup-link {
+            text-align: center;
+            margin-top: 25px;
+            font-size: 0.85rem;
+            color: #605e5c;
+        }
+        .signup-link a { color: #0078d4; font-weight: 600; text-decoration: none; }
+        .signup-link a:hover { text-decoration: underline; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <h2>Sign in</h2>
+        <p class="subtitle">to continue to your Board</p>
+
+        <form id="login-form">
+            <div class="form-group">
+                <label for="username">Username</label>
+                <input type="text" name="username" id="username" class="form-control" required autofocus>
+                <div class="username error"></div>
+            </div>
+            
+            <div class="form-group">
+                <label for="password">Password</label>
+                <input type="password" name="password" id="password" class="form-control" required>
+                <div class="password error"></div>
+            </div>
+            
+            <button type="submit" id="submit-btn">Log In</button>
+        </form>
+
+        <p class="signup-link">
+            Don't have an account? <a href="/signup">Create one</a>
+        </p>
+    </div>
+
+    <script>
+        const form = document.querySelector('#login-form');
+        const submitBtn = document.querySelector('#submit-btn');
+        const userError = document.querySelector('.username.error');
+        const passError = document.querySelector('.password.error');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // Reset errors and disable button
+            userError.textContent = '';
+            passError.textContent = '';
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Verifying...';
+
+            const username = form.username.value;
+            const password = form.password.value;
+
+            try {
+                const res = await fetch('/login', { 
+                    method: 'POST', 
+                    body: JSON.stringify({ username, password }),
+                    headers: {'Content-Type': 'application/json'}
+                });
+                
+                const data = await res.json();
+                
+                if (data.errors) {
+                    userError.textContent = data.errors.username;
+                    passError.textContent = data.errors.password;
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Log In';
+                }
+                
+                if (data.user) {
+                    location.assign('/list');
+                }
+            } catch (err) {
+                console.log(err);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Log In';
+            }
+        });
+    </script>
+</body>
+</html>

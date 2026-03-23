@@ -21,14 +21,17 @@ const taskSchema = new mongoose.Schema(
       enum: ['Pending', 'In Progress', 'Completed'],
       default: 'Pending',
     },
-    // Priority field: 1 = Critical, 2 = High, 3 = Medium, 4 = Low
     priority: {
       type: Number,
       enum: [1, 2, 3, 4],
       default: 3, 
     },
-    // Nested Subtasks
-    subtasks: [subtaskSchema]
+    subtasks: [subtaskSchema],
+    ownerId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'user',
+      required: true
+    }
   },
   {
     versionKey: false,

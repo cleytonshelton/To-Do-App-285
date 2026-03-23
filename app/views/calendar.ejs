@@ -3,24 +3,66 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-  <title>Calendar View - Todo App</title>
-  
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" />
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="../public/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <title>Calendar - Todo App</title>
+
+  <style>
+    body { background-color: #f4f7f9; font-family: 'Inter', sans-serif; }
+    #calendar { background: white; border: 1px solid #dfe1e5; border-radius: 4px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
+    
+    .calendar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; }
+    .calendar-title { font-size: 1.25rem; font-weight: 700; color: #0078d4; }
+    .cal-nav { background: #f0f2f5; border: 1px solid #ced4da; border-radius: 4px; padding: 5px 15px; cursor: pointer; transition: 0.2s; }
+    .cal-nav:hover { background: #e2e8f0; }
+
+    .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 1px; background-color: #dfe1e5; border: 1px solid #dfe1e5; }
+    .day-header { background: #f8f9fa; padding: 10px; text-align: center; font-weight: 700; font-size: 0.75rem; color: #5e6c84; text-transform: uppercase; }
+    .day { background: white; min-height: 120px; padding: 8px; position: relative; transition: background 0.2s; }
+    .day:hover { background: #fcfcfc; }
+    .day.empty { background: #fbfbfb; }
+    .day.today { background: #f0f7ff; }
+    .day.today strong { color: #0078d4; border-bottom: 2px solid #0078d4; }
+
+    .task { 
+        font-size: 0.7rem; 
+        padding: 3px 6px; 
+        margin-bottom: 3px; 
+        border-radius: 3px; 
+        white-space: nowrap; 
+        overflow: hidden; 
+        text-overflow: ellipsis; 
+        cursor: pointer;
+        border-left: 3px solid #ccc;
+    }
+    .task:hover { filter: brightness(0.95); }
+
+    /* Priority styles */
+    .prio-1 { border-left-color: #d13438; }
+    .prio-2 { border-left-color: #ffb900; }
+    .prio-3 { border-left-color: #0078d4; }
+    .prio-4 { border-left-color: #ccc; }
+
+    /* Status backgrounds */
+    .status-pending { background: #fff4ce; color: #794d00; }
+    .status-in-progress { background: #c7e0f4; color: #004578; }
+    .status-completed { background: #dff6dd; color: #107c10; opacity: 0.7; text-decoration: line-through; }
+  </style>
 </head>
-<body class="bg-light">
+
+<body>
   <%- include('./partials/nav.ejs') %>
+
   <div class="container py-5">
     <div class="d-flex justify-content-between align-items-center mb-4">
-      <h2 class="font-weight-bold">Task Calendar</h2>
-      <a href="/list" class="btn btn-modern btn-outline-secondary">Back to List</a>
+        <h2 class="font-weight-bold">Task Calendar</h2>
+        <a href="/write" class="btn btn-primary btn-sm" style="background: #0078d4; border: none;">+ New Task</a>
     </div>
 
-    <div id="calendar" class="custom-card shadow-sm p-0 overflow-hidden">
-      </div>
+    <div id="calendar"></div>
   </div>
-
   <script src="/calendar.js"></script>
 </body>
 </html>

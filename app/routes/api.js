@@ -6,14 +6,12 @@
  */
 
 import express from 'express';
+import { requireAuth } from '../db/middleware/authMiddleware.js'; // Import your middleware
 
 const COLLECTION = 'tasks';
 
 /**
  * Normalizes a task payload from a request body.
- * @param {Object} body - Raw request body
- * @param {boolean} [requireTitle=false] - Whether to enforce title presence
- * @returns {{ data: Object|null, error: string|null }}
  */
 function parseTaskBody(body = {}, requireTitle = false) {
   const { title, date, status, priority, subtasks } = body;
@@ -36,18 +34,15 @@ function parseTaskBody(body = {}, requireTitle = false) {
 
 /**
  * Creates and configures the API router.
- * @param {Object} db - Database instance (ORDB bridge)
- * @returns {express.Router} Configured Express router
  */
 export function createApiRouter(db) {
   const router = express.Router();
 
+  // Apply requireAuth to ALL API routes below
+  router.use(requireAuth);
+
   // ─── Create ───────────────────────────────────────────────────────────────
 
-  /**
-   * POST /api/tasks
-   * Creates a new task. Title is required.
-   */
   router.post('/tasks', async (req, res) => {
     const { data, error } = parseTaskBody(req.body, true);
     if (error) return res.status(400).json({ error });
@@ -59,6 +54,7 @@ export function createApiRouter(db) {
         status:   data.status   ?? 'Pending',
         priority: data.priority ?? 3,
         subtasks: data.subtasks ?? [],
+        ownerId:  req.user._id, // Set the owner from the authenticated user
       });
       res.status(201).json(task);
     } catch (err) {
@@ -69,13 +65,14 @@ export function createApiRouter(db) {
 
   // ─── Read ─────────────────────────────────────────────────────────────────
 
-  /**
-   * GET /api/tasks
-   * Returns all tasks sorted by priority then creation date.
-   */
-  router.get('/tasks', async (_req, res) => {
+  router.get('/tasks', async (req, res) => {
     try {
-      const tasks = await db.findAll(COLLECTION, {}, { sort: { priority: 1, createdAt: 1 } });
+      // Filter by ownerId
+      const tasks = await db.findAll(
+        COLLECTION, 
+        { ownerId: req.user._id }, 
+        { sort: { priority: 1, createdAt: 1 } }
+      );
       res.json(tasks);
     } catch (err) {
       console.error('Error fetching tasks:', err);
@@ -83,13 +80,10 @@ export function createApiRouter(db) {
     }
   });
 
-  /**
-   * GET /api/tasks/:id
-   * Returns a single task by ID.
-   */
   router.get('/tasks/:id', async (req, res) => {
     try {
-      const task = await db.findOne(COLLECTION, { _id: req.params.id });
+      // Ensure the task belongs to the user
+      const task = await db.findOne(COLLECTION, { _id: req.params.id, ownerId: req.user._id });
       if (!task) return res.status(404).json({ error: 'Task not found' });
       res.json(task);
     } catch (err) {
@@ -100,10 +94,6 @@ export function createApiRouter(db) {
 
   // ─── Update ───────────────────────────────────────────────────────────────
 
-  /**
-   * PUT /api/tasks/:id
-   * Updates a task's fields. At least one field must be provided.
-   */
   router.put('/tasks/:id', async (req, res) => {
     const { data, error } = parseTaskBody(req.body);
     if (error) return res.status(400).json({ error });
@@ -112,7 +102,12 @@ export function createApiRouter(db) {
     }
 
     try {
-      const task = await db.updateOne(COLLECTION, { _id: req.params.id }, data);
+      // Double check ownership during update
+      const task = await db.updateOne(
+        COLLECTION, 
+        { _id: req.params.id, ownerId: req.user._id }, 
+        data
+      );
       if (!task) return res.status(404).json({ error: 'Task not found' });
       res.json(task);
     } catch (err) {
@@ -121,10 +116,6 @@ export function createApiRouter(db) {
     }
   });
 
-  /**
-   * PUT /api/tasks/:id/subtasks/:index
-   * Toggles the completed state of a single subtask.
-   */
   router.put('/tasks/:id/subtasks/:index', async (req, res) => {
     const { id, index } = req.params;
     const completed = req.body.completed === 'true' || req.body.completed === true;
@@ -132,7 +123,7 @@ export function createApiRouter(db) {
     try {
       const task = await db.updateOne(
         COLLECTION,
-        { _id: id },
+        { _id: id, ownerId: req.user._id }, // Secure filter
         { [`subtasks.${index}.completed`]: completed }
       );
       if (!task) return res.status(404).json({ error: 'Task not found' });
@@ -145,13 +136,10 @@ export function createApiRouter(db) {
 
   // ─── Delete ───────────────────────────────────────────────────────────────
 
-  /**
-   * DELETE /api/tasks/:id
-   * Deletes a task by ID.
-   */
   router.delete('/tasks/:id', async (req, res) => {
     try {
-      const deleted = await db.deleteOne(COLLECTION, { _id: req.params.id });
+      // Only delete if ID and owner match
+      const deleted = await db.deleteOne(COLLECTION, { _id: req.params.id, ownerId: req.user._id });
       if (!deleted) return res.status(404).json({ error: 'Task not found' });
       res.json({ ok: true, deletedId: req.params.id });
     } catch (err) {

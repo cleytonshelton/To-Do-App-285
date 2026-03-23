@@ -1,76 +1,64 @@
-/* ── universal styles ──────────────────────────────────────────────── */
+/* ─── VARIABLES ────────────────────────────────────────────────────────── */
 :root {
-  --bg-body: #f8fafc;
-  --text-main: #1e293b;
-  --text-muted: #64748b;
-  --card-bg: #ffffff;
-  --primary: #4f46e5;
-  --primary-hover: #4338ca;
+  /* Azure DevOps Palette */
+  --primary: #0078d4;
+  --primary-hover: #005a9e;
+  --bg-light: #f4f7f9;
+  --white: #ffffff;
+  --border-color: #dfe1e5;
+  --text-main: #201f1e;
+  --text-muted: #5e6c84;
   
   /* Status Colors */
-  --status-pending-bg: #e0f2fe;
-  --status-pending-text: #075985;
-  --status-progress-bg: #fef9c3;
-  --status-progress-text: #854d0e;
-  --status-completed-bg: #dcfce7;
-  --status-completed-text: #166534;
+  --status-pending-bg: #fff4ce;
+  --status-pending-text: #794d00;
+  --status-pending-border: #ffb900;
+  
+  --status-progress-bg: #c7e0f4;
+  --status-progress-text: #004578;
+  --status-progress-border: #0078d4;
+  
+  --status-completed-bg: #dff6dd;
+  --status-completed-text: #107c10;
+  --status-completed-border: #107c10;
+
+  /* Priority Colors */
+  --prio-1: #d13438; /* Critical */
+  --prio-2: #ffb900; /* High */
+  --prio-3: #0078d4; /* Medium */
+  --prio-4: #ccc;    /* Low */
 }
 
+/* ─── GENERAL STYLES ───────────────────────────────────────────────────── */
 body {
-  background-color: var(--bg-body);
+  background-color: var(--bg-light);
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   color: var(--text-main);
-  line-height: 1.6;
+  margin: 0;
+  line-height: 1.5;
 }
 
-/* Card Styling */
+a { text-decoration: none; transition: 0.2s; }
+a:hover { text-decoration: none; }
+
+/* ─── SHARED COMPONENTS ────────────────────────────────────────────────── */
 .custom-card {
-  border: none;
-  border-radius: 16px;
-  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
-  background: var(--card-bg);
-  padding: 1.5rem;
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
 }
 
-/* Modern Status Badges */
-.status-badge {
-  font-weight: 600;
-  padding: 0.4rem 0.8rem;
-  border-radius: 9999px;
-  font-size: 0.75rem;
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-  display: inline-block;
-}
-
-.status-pending { background: var(--status-pending-bg); color: var(--status-pending-text); }
-.status-in-progress { background: var(--status-progress-bg); color: var(--status-progress-text); }
-.status-completed { background: var(--status-completed-bg); color: var(--status-completed-text); }
-
-/* Form Controls */
-.form-control {
-  border-radius: 8px;
-  border: 1px solid #e2e8f0;
-  padding: 0.6rem 1rem;
-  transition: all 0.2s;
-}
-
-.form-control:focus {
-  border-color: var(--primary);
-  box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.1);
-}
-
-/* Buttons */
 .btn-modern {
-  border-radius: 8px;
+  border-radius: 4px;
   font-weight: 600;
-  padding: 0.6rem 1.2rem;
+  padding: 8px 20px;
   transition: all 0.2s;
 }
 
 .btn-primary-modern {
   background-color: var(--primary);
-  color: white;
+  color: var(--white) !important;
   border: none;
 }
 
@@ -79,301 +67,120 @@ body {
   transform: translateY(-1px);
 }
 
-/* List Item Styles */
-.list-group-item {
-  border: none;
-  margin-bottom: 0.75rem;
-  border-radius: 12px !important;
-  box-shadow: 0 1px 3px rgba(0,0,0,0.05);
-  transition: transform 0.2s;
+.label-heading {
+  color: var(--text-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 8px;
 }
 
-.list-group-item:hover {
-  transform: scale(1.01);
-}
-/* Modular Grid Additions */
-.task-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1.5rem;
-}
-
-.task-card-module {
-  height: 100%;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  transition: transform 0.2s ease, box-shadow 0.2s ease;
-  border: 1px solid rgba(0,0,0,0.05);
+/* ─── AUTH PAGES (Login/Signup) ────────────────────────────────────────── */
+.auth-container {
+  max-width: 400px;
+  margin: 80px auto;
+  background: var(--white);
+  padding: 40px;
+  border-radius: 8px;
+  border: 1px solid var(--border-color);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
 }
 
-.task-card-module:hover {
-  transform: translateY(-5px);
-  box-shadow: 0 10px 20px rgba(0,0,0,0.08);
+.error {
+  color: var(--prio-1);
+  font-size: 0.8rem;
+  min-height: 1.2rem;
+  margin-top: 4px;
 }
 
-.task-footer {
-  border-top: 1px solid #f1f5f9;
-  padding-top: 1rem;
-  margin-top: 1rem;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+/* ─── KANBAN BOARD (list.ejs) ─────────────────────────────────────────── */
+.board-column {
+  width: 320px;
+  background: #f0f2f5;
+  border-radius: 4px;
+  border: 1px solid var(--border-color);
 }
 
-/* ── Calendar ──────────────────────────────────────────────── */
-
-/* Calendar Task Styling */
-.task {
-    font-size: 0.75rem;
-    padding: 2px 4px;
-    margin-top: 2px;
-    border-radius: 3px;
-    color: white; /* Contrast for the background colors */
-    overflow: hidden;
-    text-overflow: ellipsis;
-    white-space: nowrap;
+.task-card {
+  background: var(--white);
+  padding: 12px;
+  margin-bottom: 8px;
+  border-left: 4px solid #ccc;
+  cursor: grab;
 }
 
-/* Priority Background Colors */
-.prio-1 { background-color: #d13438 !important; } /* Critical */
-.prio-2 { background-color: #ffb900 !important; color: #333 !important; } /* High */
-.prio-3 { background-color: #0078d4 !important; } /* Medium/Azure */
-.prio-4 { background-color: #ccc !important; color: #333 !important; } /* Low */
+.task-card[data-status-val="Pending"] { border-left-color: var(--status-pending-border); }
+.task-card[data-status-val="In Progress"] { border-left-color: var(--status-progress-border); }
+.task-card[data-status-val="Completed"] { border-left-color: var(--status-completed-border); }
 
-/* Ensure In-Progress tasks stay visible and distinct */
-.status-in-progress {
-    border: 1px solid rgba(255,255,255,0.5);
-    font-weight: 600;
+/* ─── DASHBOARD (dashboard.ejs) ───────────────────────────────────────── */
+.stat-card {
+  padding: 20px;
+  background: var(--white);
+  border-radius: 8px;
+  border-top: 4px solid var(--primary);
+  text-align: center;
 }
 
-/* Completed tasks */
-.status-completed {
-    background-color: #107c10 !important; /* Azure Green for Done */
-    color: white !important;
+.stat-number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--text-main);
 }
 
+.stat-card.pending { border-top-color: var(--status-pending-border); }
+.stat-card.progressCard { border-top-color: var(--status-progress-border); }
+.stat-card.done { border-top-color: var(--status-completed-border); }
+
+/* ─── CALENDAR (calendar.ejs) ─────────────────────────────────────────── */
 .calendar-grid {
   display: grid;
   grid-template-columns: repeat(7, 1fr);
   gap: 1px;
-  background-color: #e2e8f0; /* Border color */
-  border: 1px solid #e2e8f0;
-  overflow: hidden;
-  text-align: center;
-  align-items: center;
-}
-
-.calendar-title {
-  font-size: 1.2rem;
-  font-weight: 700;
-}
-
-.cal-nav {
-  background: none;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  padding: 4px 12px;
-  cursor: pointer;
-  font-size: 1rem;
-}
-
-.cal-nav:hover {
-  background-color: #f0f0f0;
+  background-color: var(--border-color);
 }
 
 .day {
-  background: white;
+  background: var(--white);
   min-height: 100px;
-  padding: 10px;
+  padding: 5px;
 }
 
-.day strong {
-  display: block;
-  margin-bottom: 5px;
-  color: #64748b;
-}
-
-.task {
-  font-size: 0.75rem;
-  padding: 2px 4px;
+.calendar-task {
+  font-size: 0.7rem;
+  padding: 2px 5px;
   margin-bottom: 2px;
-  border-radius: 4px;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
+  border-radius: 2px;
 }
 
-/* ── Dashboard ──────────────────────────────────────────────── */
+/* ─── STATUS PILLS ─────────────────────────────────────────────────────── */
+.status-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-weight: 700;
+  font-size: 0.7rem;
+  text-transform: uppercase;
+}
 
-    .dashboard-header {
-      padding: 48px 0 32px;
-    }
+.status-pending { background: var(--status-pending-bg); color: var(--status-pending-text); }
+.status-in-progress { background: var(--status-progress-bg); color: var(--status-progress-text); }
+.status-completed { background: var(--status-completed-bg); color: var(--status-completed-text); }
 
-    /* ── Stat Cards ──────────────────────────────────────────────── */
-    .stat-card {
-      border-radius: 16px;
-      padding: 1.5rem;
-      background: var(--card-bg);
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.07), 0 2px 4px -1px rgba(0,0,0,0.04);
-      border-left: 4px solid transparent;
-      transition: transform 0.2s ease, box-shadow 0.2s ease;
-      height: 100%;
-    }
+/* ─── PRIORITY DOTS ───────────────────────────────────────────────────── */
+.prio-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 5px; }
+.prio-1-bg { background: var(--prio-1); }
+.prio-2-bg { background: var(--prio-2); }
+.prio-3-bg { background: var(--prio-3); }
+.prio-4-bg { background: var(--prio-4); }
 
-    .stat-card:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.08);
-    }
-
-    .stat-card.pending  { border-left-color: #0ea5e9; }
-    .stat-card.progressCard { border-left-color: #f59e0b; }
-    .stat-card.done     { border-left-color: #10b981; }
-    .stat-card.total    { border-left-color: var(--primary); }
-
-    .stat-icon {
-      width: 44px;
-      height: 44px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 1rem;
-      font-size: 1.2rem;
-    }
-
-    .stat-icon.pending  { background: var(--status-pending-bg);   color: var(--status-pending-text); }
-    .stat-icon.progress { background: var(--status-progress-bg);  color: var(--status-progress-text); }
-    .stat-icon.done     { background: var(--status-completed-bg); color: var(--status-completed-text); }
-    .stat-icon.total    { background: #ede9fe; color: var(--primary); }
-
-    .stat-number {
-      font-size: 2.4rem;
-      font-weight: 700;
-      line-height: 1;
-      margin-bottom: 0.25rem;
-      color: var(--text-main);
-    }
-
-    .stat-label {
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-    }
-
-    .stat-sub {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      margin-top: 0.4rem;
-    }
-
-    /* ── Progress Bar ────────────────────────────────────────────── */
-    .progress-section {
-      background: var(--card-bg);
-      border-radius: 16px;
-      padding: 1.5rem;
-      box-shadow: 0 4px 6px -1px rgba(0,0,0,0.07);
-      margin-bottom: 2rem;
-    }
-
-    .progress-label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 0.85rem;
-      font-weight: 600;
-      color: var(--text-muted);
-      margin-bottom: 0.5rem;
-    }
-
-    progress {
-      width: 100%;
-      height: 12px;
-      border-radius: 9999px;
-      overflow: hidden;
-      background-color: #e2e8f0;
-    }
-
-    .progress-bar {
-      border-radius: 9999px;
-      transition: width 0.6s ease;
-    }
-
-    .progress-bar.pending  { background: #0ea5e9; }
-    .progress-bar.progressCard { background: #f59e0b; }
-    .progress-bar.done     { background: #10b981; }
-
-    /* ── Recent Tasks Table ──────────────────────────────────────── */
-    .section-title {
-      font-size: 1rem;
-      font-weight: 700;
-      color: var(--text-main);
-      margin-bottom: 1rem;
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-    }
-
-    .section-title::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: #e2e8f0;
-    }
-
-    .task-row {
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 0.85rem 1rem;
-      border-radius: 10px;
-      background: #f8fafc;
-      margin-bottom: 0.5rem;
-      transition: background 0.15s;
-    }
-
-    .task-row:hover {
-      background: #f1f5f9;
-    }
-
-    .task-row-title {
-      font-weight: 600;
-      font-size: 0.9rem;
-      color: var(--text-main);
-    }
-
-    .task-row-date {
-      font-size: 0.78rem;
-      color: var(--text-muted);
-      margin-top: 2px;
-    }
-
-    .empty-state {
-      text-align: center;
-      padding: 2rem;
-      color: var(--text-muted);
-      font-size: 0.9rem;
-    }
-
-    /* ── Month Selector ──────────────────────────────────────────── */
-    .month-selector {
-      display: flex;
-      align-items: center;
-      gap: 0.5rem;
-      background: var(--card-bg);
-      border: 1px solid #e2e8f0;
-      border-radius: 10px;
-      padding: 0.4rem 0.75rem;
-      font-weight: 600;
-      font-size: 0.9rem;
-    }
-
-    .month-selector select {
-      border: none;
-      background: transparent;
-      font-weight: 600;
-      color: var(--text-main);
-      outline: none;
-      cursor: pointer;
-    }
+/* ─── SUBTASK ITEMS (write.ejs) ───────────────────────────────────────── */
+.subtask-item {
+  background: var(--white);
+  border: 1px solid var(--border-color);
+  padding: 10px;
+  margin-bottom: 5px;
+  display: flex;
+  align-items: center;
+  border-radius: 4px;
+}

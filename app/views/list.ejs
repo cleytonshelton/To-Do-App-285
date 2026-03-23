@@ -16,11 +16,10 @@
       --column-bg: #f0f2f5;
       --todo-gold: #ffb900;
       --done-green: #107c10;
-      /* Priority Colors */
-      --prio-1: #d13438; /* Critical - Red */
-      --prio-2: #ffb900; /* High - Orange/Yellow */
-      --prio-3: #0078d4; /* Medium - Blue */
-      --prio-4: #ccc;    /* Low - Grey */
+      --prio-1: #d13438; 
+      --prio-2: #ffb900; 
+      --prio-3: #0078d4; 
+      --prio-4: #ccc;    
     }
 
     html, body { height: 100%; margin: 0; background-color: var(--azure-bg); overflow: hidden; }
@@ -34,7 +33,6 @@
     .column-header { padding: 12px 16px; font-size: 0.8rem; font-weight: 700; color: #5e6c84; display: flex; justify-content: space-between; align-items: center; text-transform: uppercase; letter-spacing: 0.5px; }
     .task-list { padding: 8px; overflow-y: auto; flex: 1; min-height: 150px; }
 
-    /* Card Design */
     .task-card {
       background: white;
       border-radius: 2px;
@@ -48,12 +46,10 @@
     }
     .task-card:hover { box-shadow: 0 4px 8px rgba(0,0,0,0.12); }
     
-    /* Dynamic Status Colors */
     .task-card[data-status-val="Pending"] { border-left-color: var(--todo-gold); }
     .task-card[data-status-val="In Progress"] { border-left-color: var(--azure-blue); }
     .task-card[data-status-val="Completed"] { border-left-color: var(--done-green); opacity: 0.8; }
 
-    /* Priority Markers */
     .prio-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
     .prio-1 { background: var(--prio-1); box-shadow: 0 0 4px var(--prio-1); }
     .prio-2 { background: var(--prio-2); }
@@ -64,7 +60,7 @@
     .task-footer { font-size: 0.7rem; color: #666; display: flex; justify-content: space-between; align-items: center; }
     .subtask-counter { background: #f0f2f5; padding: 2px 6px; border-radius: 4px; font-weight: 600; font-size: 0.65rem; }
     
-    .delete-btn { color: #d13438; cursor: pointer; opacity: 0; transition: 0.2s; }
+    .delete-btn { color: #d13438; cursor: pointer; opacity: 0; transition: 0.2s; padding: 5px; }
     .task-card:hover .delete-btn { opacity: 1; }
     .sortable-ghost { opacity: 0.3; transform: scale(0.95); }
   </style>
@@ -131,6 +127,7 @@
 
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
   <script>
+    // Initialize Drag and Drop
     document.querySelectorAll('.task-list').forEach(list => {
       new Sortable(list, {
         group: 'azure-board',
@@ -139,30 +136,59 @@
         onEnd: function (evt) {
           const taskId = evt.item.getAttribute('data-id');
           const newStatus = evt.to.getAttribute('data-status');
+          
+          // Update visual status immediately
           evt.item.setAttribute('data-status-val', newStatus);
+
           $.ajax({
-            method: 'POST',
-            url: '/edit?_method=PUT',
-            data: { id: taskId, status: newStatus }
-          }).done(() => { updateCounts(); });
+            method: 'PUT', // Changed to direct PUT for cleaner logic
+            url: '/edit', 
+            data: { id: taskId, status: newStatus },
+            statusCode: {
+              401: function() { window.location.href = '/login'; }
+            }
+          }).done(() => { 
+            updateCounts(); 
+          }).fail((err) => {
+            if(err.status !== 401) alert("Failed to update status.");
+          });
         }
       });
     });
 
+    // Update the column counts dynamically
     function updateCounts() {
       document.querySelectorAll('.board-column').forEach(col => {
         const status = col.querySelector('.task-list').getAttribute('data-status');
         const count = col.querySelectorAll('.task-card').length;
-        document.getElementById('count-' + status.replace(/\s+/g, '')).innerText = count;
+        const countEl = document.getElementById('count-' + status.replace(/\s+/g, ''));
+        if(countEl) countEl.innerText = count;
       });
     }
 
+    // Handle Deletion
     $(document).on('click', '.delete-btn', function() {
       const id = $(this).data('id');
       const card = $(this).closest('.task-card');
-      if(confirm('Delete this work item?')) {
-        $.ajax({ method: 'DELETE', url: '/delete', data: { _id: id } })
-        .done(() => { card.fadeOut(200, function() { $(this).remove(); updateCounts(); }); });
+      
+      if(confirm('Are you sure you want to delete this work item?')) {
+        $.ajax({ 
+            method: 'DELETE', 
+            url: '/delete', 
+            data: { _id: id },
+            statusCode: {
+              401: function() { window.location.href = '/login'; }
+            }
+        })
+        .done(() => { 
+            card.fadeOut(200, function() { 
+                $(this).remove(); 
+                updateCounts(); 
+            }); 
+        })
+        .fail((err) => {
+            if(err.status !== 401) alert("Error deleting task.");
+        });
       }
     });
   </script>

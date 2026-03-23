@@ -6,10 +6,12 @@
 
 import mongoose from 'mongoose';
 import { ORDB } from './ordb.js';
+import User from './models/User.js';
 import Task from './models/Task.js';
 
 const MODELS = {
   tasks: Task,
+  users: User
 };
 
 function getModel(collection) {

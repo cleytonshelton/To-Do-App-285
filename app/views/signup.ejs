@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+    <title>Sign Up | Todo App</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="/css/style.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { background-color: #f4f7f9; font-family: 'Inter', sans-serif; height: 100vh; display: flex; align-items: center; }
+        .auth-container { max-width: 400px; width: 100%; margin: auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); border: 1px solid #dfe1e5; }
+        .error { font-size: 0.8rem; margin-top: 5px; min-height: 1.2rem; }
+        .btn-primary { background-color: #0078d4; border: none; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="auth-container">
+        <div class="text-center mb-4">
+            <h2 class="font-weight-bold" style="letter-spacing: -1px;">Create Account</h2>
+            <p class="text-muted small">Join the Todo App community today</p>
+        </div>
+
+        <form id="signup-form">
+            <div class="form-group">
+                <label class="small font-weight-bold text-uppercase">Username</label>
+                <input type="text" name="username" class="form-control" placeholder="e.g. johndoe" required>
+                <div class="username error text-danger"></div>
+            </div>
+            
+            <div class="form-group mb-4">
+                <label class="small font-weight-bold text-uppercase">Password</label>
+                <input type="password" name="password" class="form-control" placeholder="Min. 6 characters" required>
+                <div class="password error text-danger"></div>
+            </div>
+            
+            <button type="submit" id="submit-btn" class="btn btn-primary btn-block py-2">Sign Up</button>
+        </form>
+
+        <div class="text-center mt-4">
+            <p class="small text-muted">Already have an account? <a href="/login" style="color: #0078d4;">Login here</a></p>
+        </div>
+    </div>
+
+    <script>
+        const form = document.querySelector('#signup-form');
+        const submitBtn = document.querySelector('#submit-btn');
+        const userError = document.querySelector('.username.error');
+        const passError = document.querySelector('.password.error');
+
+        form.addEventListener('submit', async (e) => {
+            e.preventDefault();
+
+            // 1. Loading state
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Creating account...';
+            userError.textContent = '';
+            passError.textContent = '';
+
+            const username = form.username.value;
+            const password = form.password.value;
+
+            try {
+                const res = await fetch('/signup', { 
+                    method: 'POST', 
+                    body: JSON.stringify({ username, password }),
+                    headers: {'Content-Type': 'application/json'}
+                });
+                
+                const data = await res.json();
+                
+                if (data.errors) {
+                    userError.textContent = data.errors.username;
+                    passError.textContent = data.errors.password;
+                    // Reset button if there are errors
+                    submitBtn.disabled = false;
+                    submitBtn.textContent = 'Sign Up';
+                }
+                
+                if (data.user) {
+                    // Success! Redirect to the main board
+                    location.assign('/list');
+                }
+            } catch (err) {
+                console.error("Signup error:", err);
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Sign Up';
+            }
+        });
+    </script>
+</body>
+</html>

@@ -4,7 +4,6 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
-
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" />
   <link rel="stylesheet" href="/css/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
@@ -13,9 +12,11 @@
   <title>Create Work Item - Todo App</title>
   <style>
     body { background-color: #f4f7f9; font-family: 'Inter', sans-serif; }
-    .custom-card { border: 1px solid #dfe1e5; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); }
-    .subtask-item { background: #fff; border: 1px solid #e9ecef; border-radius: 4px; margin-bottom: 8px; padding: 10px; display: flex; align-items: center; gap: 10px; }
-    .font-weight-600 { font-weight: 600; color: #5e6c84; font-size: 0.85rem; text-transform: uppercase; }
+    .custom-card { border: 1px solid #dfe1e5; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); background: white; }
+    .subtask-item { background: #fff; border: 1px solid #e9ecef; border-radius: 4px; margin-bottom: 8px; padding: 10px; display: flex; align-items: center; gap: 10px; transition: border-color 0.2s; }
+    .subtask-item:focus-within { border-color: #0078d4; }
+    .label-heading { font-weight: 600; color: #5e6c84; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
+    .form-control:focus { border-color: #0078d4; box-shadow: none; }
   </style>
 </head>
 
@@ -24,23 +25,26 @@
 
   <div class="container py-5">
     <div class="row justify-content-center">
-      <div class="col-md-10">
+      <div class="col-md-10 col-lg-8">
         
-        <h4 class="mb-4"><strong>Create New Work Item</strong></h4>
+        <div class="d-flex align-items-center mb-4">
+            <a href="/list" class="text-muted mr-3"><i class="fas fa-arrow-left"></i></a>
+            <h4 class="m-0"><strong>Create New Work Item</strong></h4>
+        </div>
 
         <div class="card custom-card">
-          <div class="card-body p-4">
-            <form action="/add" method="POST">
+          <div class="card-body p-4 p-md-5">
+            <form action="/add" method="POST" id="create-task-form">
               
               <div class="form-group mb-4">
-                <label class="font-weight-600">Title</label>
-                <input type="text" class="form-control" name="title" placeholder="What needs to be done?" required />
+                <label class="label-heading">Title</label>
+                <input type="text" class="form-control form-control-lg" name="title" placeholder="What needs to be done?" required autofocus />
               </div>
 
               <div class="row mb-4">
                 <div class="col-md-4">
                   <div class="form-group">
-                    <label class="font-weight-600">Initial Status</label>
+                    <label class="label-heading">Initial Status</label>
                     <select class="form-control" name="status">
                       <option value="Pending" selected>To Do</option>
                       <option value="In Progress">In Progress</option>
@@ -51,7 +55,7 @@
 
                 <div class="col-md-4">
                   <div class="form-group">
-                    <label class="font-weight-600">Priority</label>
+                    <label class="label-heading">Priority</label>
                     <select class="form-control" name="priority">
                       <option value="1">1 - Critical</option>
                       <option value="2">2 - High</option>
@@ -63,7 +67,7 @@
 
                 <div class="col-md-4">
                   <div class="form-group">
-                    <label class="font-weight-600">Due Date</label>
+                    <label class="label-heading">Due Date</label>
                     <input 
                       type="datetime-local" 
                       class="form-control" 
@@ -75,22 +79,22 @@
                 </div>
               </div>
 
-              <hr>
+              <hr class="my-4">
 
               <div class="form-group">
-                <label class="font-weight-600">Subtasks (Child Items)</label>
+                <label class="label-heading mb-3">Subtasks (Child Items)</label>
                 <div id="subtask-list">
-                  </div>
+                    </div>
                 <button type="button" id="add-subtask" class="btn btn-sm btn-outline-primary mt-2">
-                  <i class="fas fa-plus mr-1"></i> Add Subtask
+                  <i class="fas fa-plus mr-1"></i> Add Child Item
                 </button>
               </div>
 
-              <div class="mt-5 border-top pt-4">
-                <button type="submit" class="btn btn-primary px-4" style="background-color: #0078d4; border: none;">
+              <div class="mt-5 border-top pt-4 d-flex align-items-center">
+                <button type="submit" class="btn btn-primary px-5 shadow-sm" style="background-color: #0078d4; border: none; font-weight: 600;">
                   Create Item
                 </button>
-                <a href="/list" class="btn btn-link text-muted">Cancel</a>
+                <a href="/list" class="btn btn-link text-muted ml-2">Cancel</a>
               </div>
             </form>
           </div>
@@ -101,26 +105,41 @@
   </div>
 
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+  
   <script>
-    // Set default date to now
-    const now = new Date();
-    now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
-    document.getElementById('defaultDate').value = now.toISOString().slice(0, 16);
+    // 1. Set default date to 24 hours from now for a better UX
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    tomorrow.setMinutes(tomorrow.getMinutes() - tomorrow.getTimezoneOffset());
+    document.getElementById('defaultDate').value = tomorrow.toISOString().slice(0, 16);
 
-    // Dynamic Subtask Logic
+    // 2. Dynamic Subtask Logic
     let subCount = 0;
     $('#add-subtask').click(function() {
       const row = `
-        <div class="subtask-item">
-          <input type="checkbox" name="subtasks[${subCount}][completed]" value="true" style="display:none;"> <input type="text" name="subtasks[${subCount}][title]" placeholder="Describe child task..." class="form-control form-control-sm border-0" required>
+        <div class="subtask-item animate__animated animate__fadeInUp">
+          <input type="hidden" name="subtasks[${subCount}][completed]" value="false"> 
+          <i class="far fa-circle text-muted" style="font-size: 0.8rem;"></i>
+          <input type="text" name="subtasks[${subCount}][title]" placeholder="Describe child task..." class="form-control form-control-sm border-0" required>
           <button type="button" class="btn btn-link text-danger remove-subtask p-0"><i class="fas fa-times"></i></button>
         </div>`;
       $('#subtask-list').append(row);
       subCount++;
+      
+      // Auto-focus the new input
+      $('#subtask-list .subtask-item:last-child input[type="text"]').focus();
     });
 
+    // 3. Handle Subtask Removal
     $(document).on('click', '.remove-subtask', function() {
-      $(this).parent().remove();
+      $(this).closest('.subtask-item').remove();
+    });
+
+    // 4. Client-side validation check
+    $('#create-task-form').on('submit', function() {
+        const btn = $(this).find('button[type="submit"]');
+        btn.prop('disabled', true).html('<i class="fas fa-spinner fa-spin mr-2"></i>Creating...');
     });
   </script>
 </body>

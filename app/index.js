@@ -13,6 +13,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import methodOverride from 'method-override';
+import cookieParser from 'cookie-parser';
 
 // Import routes
 import { createApiRouter } from './routes/api.js';
@@ -33,6 +34,7 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(methodOverride('_method'));
 app.use(express.static('public'));
+app.use(cookieParser());
 
 // ========== Routes ==========
 app.use('/api', createApiRouter(db));
