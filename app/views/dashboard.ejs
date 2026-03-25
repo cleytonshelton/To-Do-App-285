@@ -5,27 +5,76 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" />
-  <link rel="stylesheet" href="/style.css">
+  <link rel="stylesheet" href="/css/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <title>Dashboard - Todo App</title>
+  <style>
+    body { background-color: #f4f7f9; font-family: 'Inter', sans-serif; }
+    
+    /* Dashboard Specific Layout */
+    .dashboard-container { padding-top: 2rem; padding-bottom: 3rem; }
+    
+    /* Stat Cards */
+    .stat-card {
+      background: white;
+      border: 1px solid #dfe1e5;
+      border-radius: 4px;
+      padding: 1.5rem;
+      text-align: center;
+      transition: transform 0.2s, box-shadow 0.2s;
+      height: 100%;
+    }
+    .stat-card:hover { transform: translateY(-3px); box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
+    
+    .stat-icon {
+      width: 40px; height: 40px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center;
+      margin: 0 auto 1rem;
+    }
+    .stat-icon.total { background: #f0f7ff; color: #0078d4; }
+    .stat-icon.pending { background: #fff4ce; color: #794d00; }
+    .stat-icon.progress { background: #a5c7e2af; color: #000f9b; }
+    .stat-icon.done { background: #dff6dd; color: #107c10; }
+
+    .stat-number { font-size: 2rem; font-weight: 700; color: #201f1e; margin-bottom: 0.25rem; }
+    .stat-label { font-size: 0.85rem; font-weight: 600; color: #5e6c84; text-transform: uppercase; }
+    .stat-sub { font-size: 0.75rem; color: #a1a1a1; }
+
+    /* Progress Section */
+    .progress-section { background: white; border: 1px solid #dfe1e5; padding: 2rem; border-radius: 4px; }
+    .progress-label { font-size: 0.85rem; font-weight: 600; margin-bottom: 0.5rem; color: #323130; }
+
+    /* Task Lists */
+    .section-title { font-size: 0.9rem; color: #605e5c; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 2px solid #dfe1e5; padding-bottom: 0.5rem; margin-bottom: 1rem; }
+    .task-row { transition: background 0.2s; padding: 0.75rem 0.5rem; }
+    .task-row:hover { background: #f8f9fa; }
+    .task-row-title { font-size: 0.9rem; font-weight: 600; color: #0078d4; }
+    
+    /* Selector Styling */
+    .month-selector select {
+      border: 1px solid #dfe1e5;
+      background: white;
+      padding: 4px 12px;
+      border-radius: 4px;
+      margin-left: 8px;
+      font-weight: 600;
+      color: #323130;
+    }
+  </style>
 </head>
 
 <body>
   <%- include('./partials/nav.ejs') %>
 
-  <div class="container dashboard-header">
+  <div class="container dashboard-container">
 
-    <!-- Page Title -->
-    <div class="mb-3">
-      <h2 class="font-weight-bold mb-1" style="letter-spacing: -0.5px;">Dashboard</h2>
-      <p class="text-muted mb-0" style="font-size: 0.9rem;">Your task overview for the selected month</p>
-    </div>
-
-    <!-- Month Filter (own row) -->
-    <div class="mb-4">
-      <div class="month-selector d-inline-flex">
-        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="#64748b" viewBox="0 0 16 16">
-          <path d="M11 6.5a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm-5 3a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1zm3 0a.5.5 0 0 1 .5-.5h1a.5.5 0 0 1 .5.5v1a.5.5 0 0 1-.5.5h-1a.5.5 0 0 1-.5-.5v-1z"/>
+    <div class="d-flex justify-content-between align-items-end mb-4">
+      <div>
+        <h2 class="font-weight-bold mb-1" style="letter-spacing: -0.5px;">Dashboard</h2>
+        <p class="text-muted mb-0" style="font-size: 0.9rem;">Your task overview for the selected month</p>
+      </div>
+      <div class="month-selector d-flex align-items-center">
+        <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="#64748b" viewBox="0 0 16 16">
           <path d="M3.5 0a.5.5 0 0 1 .5.5V1h8V.5a.5.5 0 0 1 1 0V1h1a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2V3a2 2 0 0 1 2-2h1V.5a.5.5 0 0 1 .5-.5zM1 4v10a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1V4H1z"/>
         </svg>
         <select id="monthSelect"></select>
@@ -33,228 +82,180 @@
       </div>
     </div>
 
-    <!-- Stat Cards -->
-    <div class="row mb-4" id="statCards">
+    <div class="row mb-5" id="statCards">
       <div class="col-6 col-md-3 mb-3">
-        <div class="stat-card total">
-          <div class="stat-icon total">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M5 10.5a.5.5 0 0 1 .5-.5h2a.5.5 0 0 1 0 1h-2a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5zm0-2a.5.5 0 0 1 .5-.5h5a.5.5 0 0 1 0 1h-5a.5.5 0 0 1-.5-.5z"/>
-              <path d="M3 0h10a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V2a2 2 0 0 1 2-2zm0 1a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1V2a1 1 0 0 0-1-1H3z"/>
-            </svg>
-          </div>
+        <div class="stat-card">
+          <div class="stat-icon total"><i class="fas fa-list-ul"></i></div>
           <div class="stat-number" id="totalCount">—</div>
           <div class="stat-label">Total Tasks</div>
-          <div class="stat-sub" id="totalSub">this month</div>
+          <div class="stat-sub" id="totalSub">...</div>
         </div>
       </div>
       <div class="col-6 col-md-3 mb-3">
-        <div class="stat-card pending">
-          <div class="stat-icon pending">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M8 3.5a.5.5 0 0 0-1 0V9a.5.5 0 0 0 .252.434l3.5 2a.5.5 0 0 0 .496-.868L8 8.71V3.5z"/>
-              <path d="M8 16A8 8 0 1 0 8 0a8 8 0 0 0 0 16zm7-8A7 7 0 1 1 1 8a7 7 0 0 1 14 0z"/>
-            </svg>
-          </div>
+        <div class="stat-card">
+          <div class="stat-icon pending"><i class="fas fa-clock"></i></div>
           <div class="stat-number" id="pendingCount">—</div>
-          <div class="stat-label">Open</div>
-          <div class="stat-sub" id="pendingSub">awaiting action</div>
+          <div class="stat-label">To Do</div>
+          <div class="stat-sub" id="pendingSub">...</div>
         </div>
       </div>
       <div class="col-6 col-md-3 mb-3">
-        <div class="stat-card progressCard">
-          <div class="stat-icon progress">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M4 11a1 1 0 1 1 2 0v1a1 1 0 1 1-2 0v-1zm6-4a1 1 0 1 1 2 0v5a1 1 0 1 1-2 0V7zM7 9a1 1 0 1 1 2 0v3a1 1 0 1 1-2 0V9z"/>
-              <path d="M4 1.5H3a2 2 0 0 0-2 2V14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V3.5a2 2 0 0 0-2-2h-1v1h1a1 1 0 0 1 1 1V14a1 1 0 0 1-1 1H3a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1h1v-1z"/>
-            </svg>
-          </div>
+        <div class="stat-card">
+          <div class="stat-icon progress"><i class="fas fa-spinner"></i></div>
           <div class="stat-number" id="progressCount">—</div>
           <div class="stat-label">In Progress</div>
-          <div class="stat-sub" id="progressSub">being worked on</div>
+          <div class="stat-sub" id="progressSub">...</div>
         </div>
       </div>
       <div class="col-6 col-md-3 mb-3">
-        <div class="stat-card done">
-          <div class="stat-icon done">
-            <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16">
-              <path d="M8 15A7 7 0 1 1 8 1a7 7 0 0 1 0 14zm0 1A8 8 0 1 0 8 0a8 8 0 0 0 0 16z"/>
-              <path d="m10.97 4.97-.02.022-3.473 4.425-2.093-2.094a.75.75 0 0 0-1.06 1.06L6.97 11.03a.75.75 0 0 0 1.079-.02l3.992-4.99a.75.75 0 0 0-1.071-1.05z"/>
-            </svg>
-          </div>
+        <div class="stat-card">
+          <div class="stat-icon done"><i class="fas fa-check-circle"></i></div>
           <div class="stat-number" id="completedCount">—</div>
           <div class="stat-label">Completed</div>
-          <div class="stat-sub" id="completedSub">closed out</div>
+          <div class="stat-sub" id="completedSub">...</div>
         </div>
       </div>
     </div>
 
-    <!-- Progress Bars -->
-    <div class="progress-section mb-4">
-      <h6 class="font-weight-bold mb-3" style="font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.05em; color: var(--text-muted);">
-        Monthly Completion Breakdown
-      </h6>
-      <div class="mb-3">
-        <div class="progress-label"><span>Open</span><span id="pendingPct">0%</span></div>
-        <div class="progress"><div class="progress-bar pending" id="pendingBar" style="width: 0%"></div></div>
+    <div class="progress-section mb-5">
+      <h6 class="label-heading mb-4">Monthly Completion Breakdown</h6>
+      <div class="mb-4">
+        <div class="progress-label d-flex justify-content-between"><span>To Do</span><span id="pendingPct">0%</span></div>
+        <div class="progress"><div class="progress-bar" id="pendingBar" style="width: 0%; background-color: #ffb900;"></div></div>
       </div>
-      <div class="mb-3">
-        <div class="progress-label"><span>In Progress</span><span id="progressPct">0%</span></div>
-        <div class="progress"><div class="progress-bar progress" id="progressBar" style="width: 0%"></div></div>
+      <div class="mb-4">
+        <div class="progress-label d-flex justify-content-between"><span>In Progress</span><span id="progressPct">0%</span></div>
+        <div class="progress"><div class="progress-bar" id="progressBar" style="width: 0%; background-color: #0078d4;"></div></div>
       </div>
       <div class="mb-0">
-        <div class="progress-label"><span>Completed</span><span id="completedPct">0%</span></div>
-        <div class="progress"><div class="progress-bar done" id="completedBar" style="width: 0%"></div></div>
+        <div class="progress-label d-flex justify-content-between"><span>Completed</span><span id="completedPct">0%</span></div>
+        <div class="progress"><div class="progress-bar" id="completedBar" style="width: 0%; background-color: #107c10;"></div></div>
       </div>
     </div>
 
-    <!-- Recent Tasks for Month -->
     <div class="row">
-      <!-- Open Tasks -->
       <div class="col-md-4 mb-4">
         <p class="section-title">Open Tasks</p>
-        <div id="pendingList"><div class="empty-state">No open tasks</div></div>
+        <div id="pendingList"><div class="empty-state text-muted small">Loading...</div></div>
       </div>
-
-      <!-- In Progress -->
       <div class="col-md-4 mb-4">
         <p class="section-title">In Progress</p>
-        <div id="progressList"><div class="empty-state">No tasks in progress</div></div>
+        <div id="progressList"><div class="empty-state text-muted small">Loading...</div></div>
       </div>
-
-      <!-- Completed -->
       <div class="col-md-4 mb-4">
         <p class="section-title">Completed</p>
-        <div id="completedList"><div class="empty-state">No completed tasks</div></div>
+        <div id="completedList"><div class="empty-state text-muted small">Loading...</div></div>
       </div>
     </div>
 
   </div>
 
-  <footer class="text-center py-4 text-muted border-top mt-3">
+  <footer class="text-center py-4 text-muted border-top mt-5">
     <small>&copy; 2026 Todo App - Built with Express & ORDB</small>
   </footer>
 
-  <script src="https://code.jquery.com/jquery-3.4.1.slim.min.js"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
 
   <script>
-    const MONTHS = [
-      "January","February","March","April",
-      "May","June","July","August",
-      "September","October","November","December"
-    ];
+    const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
 
     const today = new Date();
     let selectedMonth = today.getMonth();
-    let selectedYear  = today.getFullYear();
+    let selectedYear = today.getFullYear();
 
-    // ── Populate selectors ───────────────────────────────────────────────────
     const monthSelect = document.getElementById("monthSelect");
-    const yearSelect  = document.getElementById("yearSelect");
+    const yearSelect = document.getElementById("yearSelect");
 
+    // Init Selectors
     MONTHS.forEach((m, i) => {
-      const opt = document.createElement("option");
-      opt.value = i;
-      opt.textContent = m;
+      const opt = new Option(m, i);
       if (i === selectedMonth) opt.selected = true;
-      monthSelect.appendChild(opt);
+      monthSelect.add(opt);
     });
 
     for (let y = selectedYear - 2; y <= selectedYear + 1; y++) {
-      const opt = document.createElement("option");
-      opt.value = y;
-      opt.textContent = y;
+      const opt = new Option(y, y);
       if (y === selectedYear) opt.selected = true;
-      yearSelect.appendChild(opt);
+      yearSelect.add(opt);
     }
 
-    monthSelect.addEventListener("change", () => { selectedMonth = parseInt(monthSelect.value); renderDashboard(allTasks); });
-    yearSelect.addEventListener("change",  () => { selectedYear  = parseInt(yearSelect.value);  renderDashboard(allTasks); });
+    monthSelect.onchange = () => { selectedMonth = parseInt(monthSelect.value); renderDashboard(allTasks); };
+    yearSelect.onchange = () => { selectedYear = parseInt(yearSelect.value); renderDashboard(allTasks); };
 
-    // ── Data ─────────────────────────────────────────────────────────────────
     let allTasks = [];
 
     async function loadTasks() {
-      const res = await fetch("/listjson");
-      allTasks = await res.json();
-      renderDashboard(allTasks);
+      try {
+        const res = await fetch("/listjson");
+        if (res.status === 401) return window.location.href = '/login';
+        allTasks = await res.json();
+        renderDashboard(allTasks);
+      } catch (err) {
+        console.error('Fetch error:', err);
+      }
     }
 
-    // ── Render ────────────────────────────────────────────────────────────────
     function renderDashboard(tasks) {
-      // Filter to selected month/year using createdAt (falls back to date field)
       const filtered = tasks.filter(t => {
-        const d = new Date(t.createdAt || t.date);
+        const d = new Date(t.date || t.createdAt);
         return !isNaN(d) && d.getMonth() === selectedMonth && d.getFullYear() === selectedYear;
       });
 
-      const pending   = filtered.filter(t => t.status === "Pending");
+      const pending = filtered.filter(t => t.status === "Pending");
       const inProgress = filtered.filter(t => t.status === "In Progress");
       const completed = filtered.filter(t => t.status === "Completed");
-      const total     = filtered.length;
+      const total = filtered.length;
 
-      // ── Stat numbers ──────────────────────────────────────────────────────
-      document.getElementById("totalCount").textContent     = total;
-      document.getElementById("pendingCount").textContent   = pending.length;
-      document.getElementById("progressCount").textContent  = inProgress.length;
-      document.getElementById("completedCount").textContent = completed.length;
+      // Stats
+      document.getElementById("totalCount").innerText = total;
+      document.getElementById("pendingCount").innerText = pending.length;
+      document.getElementById("progressCount").innerText = inProgress.length;
+      document.getElementById("completedCount").innerText = completed.length;
 
-      const monthLabel = MONTHS[selectedMonth] + " " + selectedYear;
-      document.getElementById("totalSub").textContent     = monthLabel;
-      document.getElementById("pendingSub").textContent   = monthLabel;
-      document.getElementById("progressSub").textContent  = monthLabel;
-      document.getElementById("completedSub").textContent = monthLabel;
+      const subText = MONTHS[selectedMonth] + " " + selectedYear;
+      ["totalSub", "pendingSub", "progressSub", "completedSub"].forEach(id => document.getElementById(id).innerText = subText);
 
-      // ── Progress bars ─────────────────────────────────────────────────────
-      function pct(n) { return total > 0 ? Math.round((n / total) * 100) : 0; }
+      // Bars
+      const calcPct = (n) => total > 0 ? Math.round((n / total) * 100) : 0;
+      const pPct = calcPct(pending.length), prPct = calcPct(inProgress.length), cPct = calcPct(completed.length);
 
-      const pPct  = pct(pending.length);
-      const prPct = pct(inProgress.length);
-      const cPct  = pct(completed.length);
+      document.getElementById("pendingBar").style.width = pPct + "%";
+      document.getElementById("progressBar").style.width = prPct + "%";
+      document.getElementById("completedBar").style.width = cPct + "%";
+      document.getElementById("pendingPct").innerText = pPct + "%";
+      document.getElementById("progressPct").innerText = prPct + "%";
+      document.getElementById("completedPct").innerText = cPct + "%";
 
-      document.getElementById("pendingBar").style.width   = pPct  + "%";
-      document.getElementById("progressBar").style.width  = prPct + "%";
-      document.getElementById("completedBar").style.width = cPct  + "%";
-      document.getElementById("pendingPct").textContent   = pPct  + "%";
-      document.getElementById("progressPct").textContent  = prPct + "%";
-      document.getElementById("completedPct").textContent = cPct  + "%";
-
-      // ── Task lists ────────────────────────────────────────────────────────
-      renderList("pendingList",   pending,    "status-pending");
-      renderList("progressList",  inProgress, "status-in-progress");
-      renderList("completedList", completed,  "status-completed");
+      // Lists
+      renderList("pendingList", pending, "badge-warning");
+      renderList("progressList", inProgress, "badge-info");
+      renderList("completedList", completed, "badge-success");
     }
 
     function renderList(containerId, tasks, badgeClass) {
       const el = document.getElementById(containerId);
       if (tasks.length === 0) {
-        el.innerHTML = `<div class="empty-state">No tasks here</div>`;
+        el.innerHTML = `<div class="empty-state text-muted small italic p-2">No tasks found</div>`;
         return;
       }
       el.innerHTML = tasks.map(t => `
-        <div class="task-row">
-          <div>
-            <div class="task-row-title">${escapeHtml(t.title)}</div>
-            <div class="task-row-date">${t.date || "No date set"}</div>
+        <div class="task-row d-flex justify-content-between align-items-center border-bottom">
+          <div class="text-truncate mr-2">
+            <div class="task-row-title text-truncate">${escapeHtml(t.title)}</div>
+            <div class="task-row-date">${t.date ? new Date(t.date).toLocaleDateString() : 'No date'}</div>
           </div>
-          <a href="/detail/${t._id}" class="status-badge ${badgeClass}" style="font-size:0.7rem; text-decoration:none;">
-            View
-          </a>
+          <a href="/detail/${t._id}" class="badge ${badgeClass} badge-pill">View</a>
         </div>
       `).join("");
     }
 
     function escapeHtml(str) {
-      return String(str)
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;");
+      return String(str || "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
     }
 
     loadTasks();
   </script>
-
 </body>
 </html>
