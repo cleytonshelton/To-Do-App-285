@@ -7,6 +7,7 @@
 
 import express from 'express';
 import { requireAuth } from '../db/middleware/authMiddleware.js'; // Import your middleware
+import { createTaskWithRewards, updateTaskWithRewards } from '../util/rewards.js';
 
 const COLLECTION = 'tasks';
 
@@ -48,13 +49,12 @@ export function createApiRouter(db) {
     if (error) return res.status(400).json({ error });
 
     try {
-      const task = await db.insertOne(COLLECTION, {
+      const task = await createTaskWithRewards(db, req.user._id, {
         title:    data.title,
         date:     data.date     ?? null,
         status:   data.status   ?? 'Pending',
         priority: data.priority ?? 3,
         subtasks: data.subtasks ?? [],
-        ownerId:  req.user._id, // Set the owner from the authenticated user
       });
       res.status(201).json(task);
     } catch (err) {
@@ -103,11 +103,7 @@ export function createApiRouter(db) {
 
     try {
       // Double check ownership during update
-      const task = await db.updateOne(
-        COLLECTION, 
-        { _id: req.params.id, ownerId: req.user._id }, 
-        data
-      );
+      const task = await updateTaskWithRewards(db, req.params.id, req.user._id, data);
       if (!task) return res.status(404).json({ error: 'Task not found' });
       res.json(task);
     } catch (err) {

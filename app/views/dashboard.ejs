@@ -82,6 +82,21 @@
       </div>
     </div>
 
+    <div class="mb-4">
+      <div class="alert alert-info py-3 mb-4" style="border-radius: 8px;">
+        <div class="d-flex justify-content-between align-items-center">
+          <div>
+            <strong>Your Reward Points:</strong>
+            <span class="ml-2" style="font-size: 1.1rem; color: #065a82;"><%= user?.points || 0 %> pts</span>
+          </div>
+          <div>
+            <a href="/rewards" class="btn btn-sm btn-outline-primary">Redeem Rewards</a>
+          </div>
+        </div>
+        <p class="mb-0 mt-2 text-muted" style="font-size: 0.9rem;">Earn points by completing tasks. Use them to unlock rewards from the rewards page.</p>
+      </div>
+    </div>
+
     <div class="row mb-5" id="statCards">
       <div class="col-6 col-md-3 mb-3">
         <div class="stat-card">

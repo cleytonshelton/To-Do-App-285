@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
+  <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <title>Rewards</title>
+  <style>
+    body { font-family: 'Inter', sans-serif; background: #f4f7f9; }
+    .hero { background: white; border-radius: 8px; padding: 2rem; margin-top: 2rem; border: 1px solid #e2e7ed; }
+    .reward-card { border: 1px solid #e2e7ed; border-radius: 8px; background: white; transition: transform 0.2s; }
+    .reward-card:hover { transform: translateY(-2px); }
+    .reward-cost { font-size: 1rem; font-weight: 700; color: #107c10; }
+    .reward-item + .reward-item { margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <%- include('./partials/nav.ejs') %>
+
+  <div class="container">
+    <div class="hero">
+      <div class="d-flex justify-content-between align-items-start flex-wrap">
+        <div>
+          <h1 class="h4 font-weight-bold mb-2">Rewards Store</h1>
+          <p class="text-muted mb-2">Spend your points on quick rewards and keep your productivity momentum going.</p>
+        </div>
+        <div class="text-right">
+          <div class="text-muted small">Your balance</div>
+          <div class="h5 font-weight-bold"><%= user?.points || 0 %> points</div>
+        </div>
+      </div>
+
+      <% if (message) { %>
+        <div class="alert alert-success mt-4"><%= message %></div>
+      <% } %>
+      <% if (error) { %>
+        <div class="alert alert-danger mt-4"><%= error %></div>
+      <% } %>
+    </div>
+
+    <div class="row mt-4">
+      <% rewards.forEach(reward => { %>
+        <div class="col-md-4 mb-4">
+          <div class="reward-card p-4 h-100">
+            <div class="d-flex justify-content-between align-items-start mb-3">
+              <div>
+                <h5 class="mb-1"><%= reward.name %></h5>
+                <p class="text-muted small mb-0"><%= reward.description %></p>
+              </div>
+              <div class="reward-cost"><%= reward.cost %> pts</div>
+            </div>
+            <form action="/rewards/redeem" method="POST">
+              <input type="hidden" name="item" value="<%= reward.name %>" />
+              <button type="submit" class="btn btn-primary btn-block" <%= (user?.points || 0) < reward.cost ? 'disabled' : '' %>>
+                Redeem
+              </button>
+            </form>
+          </div>
+        </div>
+      <% }) %>
+    </div>
+
+    <div class="card mb-5">
+      <div class="card-body">
+        <h5 class="card-title">How it works</h5>
+        <p class="card-text text-muted">Complete tasks to earn points. Points are added automatically when a task status becomes Completed, and you can spend them here on simple reward items.</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
+  <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+</body>
+</html>
