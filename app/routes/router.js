@@ -12,7 +12,27 @@ function parseSubtasks(subtasks, withCompleted = false) {
             : sub
     );
 }
+function normalizeTags(tagsInput) {
+  if (!tagsInput) return [];
+  const raw = Array.isArray(tagsInput) ? tagsInput.join(',') : String(tagsInput);
 
+  const cleaned = raw
+    .split(',')
+    .map(t => t.trim())
+    .filter(Boolean)
+    .map(t => t.slice(0, 30));
+
+  const seen = new Set();
+  const unique = [];
+  for (const tag of cleaned) {
+    const key = tag.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(tag);
+    }
+  }
+  return unique;
+}
 export function createRouter(db) {
     const router = express.Router();
 
@@ -44,14 +64,21 @@ export function createRouter(db) {
     router.get('/dashboard', (_req, res) => res.render('dashboard.ejs'));
 
     router.get('/list', async (req, res) => {
-        try {
-            const tasks = await db.findAll(COLLECTION, { ownerId: req.user._id }, { sort: { createdAt: 1 } });
-            res.render('list.ejs', { posts: tasks });
-        } catch (err) {
-            console.error('Error fetching tasks:', err);
-            res.status(500).send('Failed to fetch tasks');
-        }
-    });
+    try {
+        const { tag } = req.query;
+
+        const filter = { ownerId: req.user._id };
+        if (tag) filter.tags = tag;
+
+        const tasks = await db.findAll(COLLECTION, filter, { sort: { createdAt: 1 } });
+        const allTags = [...new Set(tasks.flatMap(t => t.tags || []))].sort();
+
+        res.render('list.ejs', { posts: tasks, allTags, selectedTag: tag || '' });
+    } catch (err) {
+        console.error('Error fetching tasks:', err);
+        res.status(500).send('Failed to fetch tasks');
+    }
+});
 
     router.get('/listjson', async (req, res) => {
         try {
@@ -73,21 +100,24 @@ export function createRouter(db) {
     });
 
     router.post('/add', async (req, res) => {
-        try {
-            const { title, date, status, priority, subtasks } = req.body;
-            await db.insertOne(COLLECTION, {
-                title: title || '',
-                date: date || null,
-                status: status || 'Pending',
-                priority: parseInt(priority) || 3,
-                subtasks: parseSubtasks(subtasks),
-                ownerId: req.user._id, 
-            });
-            res.redirect('/list');
-        } catch (err) {
-            res.status(500).send('Failed to add task');
-        }
-    });
+    try {
+        const { title, date, status, priority, subtasks, tags } = req.body;
+        const tagsArr = normalizeTags(tags);
+
+        await db.insertOne(COLLECTION, {
+            title: title || '',
+            date: date || null,
+            status: status || 'Pending',
+            priority: parseInt(priority) || 3,
+            subtasks: parseSubtasks(subtasks),
+            tags: tagsArr,
+            ownerId: req.user._id, 
+        });
+        res.redirect('/list');
+    } catch (err) {
+        res.status(500).send('Failed to add task');
+    }
+});
 
     router.get('/edit/:id', async (req, res) => {
         try {
@@ -100,15 +130,16 @@ export function createRouter(db) {
     });
 
     router.put('/edit', async (req, res) => {
-        try {
-            const { id, title, date, status, priority, subtasks } = req.body;
-            const updateData = {
-                ...(title !== undefined && { title }),
-                ...(date !== undefined && { date }),
-                ...(status !== undefined && { status }),
-                ...(priority !== undefined && { priority: parseInt(priority) }),
-                ...(subtasks !== undefined && { subtasks: parseSubtasks(subtasks, true) }),
-            };
+    try {
+        const { id, title, date, status, priority, subtasks, tags } = req.body;
+        const updateData = {
+            ...(title !== undefined && { title }),
+            ...(date !== undefined && { date }),
+            ...(status !== undefined && { status }),
+            ...(priority !== undefined && { priority: parseInt(priority) }),
+            ...(subtasks !== undefined && { subtasks: parseSubtasks(subtasks, true) }),
+            ...(tags !== undefined && { tags: normalizeTags(tags) }),
+        };
 
             const updated = await db.updateOne(COLLECTION, { _id: id, ownerId: req.user._id }, updateData);
             if (!updated) return res.status(403).send('Unauthorized');
