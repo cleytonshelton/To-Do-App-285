@@ -1,15 +1,39 @@
-<nav class="navbar navbar-expand-lg navbar-light bg-white border-bottom py-3">
+<script>
+  (function initTheme() {
+    let theme = localStorage.getItem('user-theme');
+
+    // 1. Check if the backend passed a logged-in user object with a saved theme
+    <% if (typeof user !== 'undefined' && user && user.preferences && user.preferences.theme) { %>
+      const dbTheme = '<%= user.preferences.theme %>';
+      
+      // 2. If the browser doesn't match the database (e.g., they just logged in), trust the database!
+      if (theme !== dbTheme) {
+        theme = dbTheme;
+        localStorage.setItem('user-theme', dbTheme);
+      }
+    <% } %>
+
+    // 3. Fallback to light if absolutely nothing is set
+    if (!theme) {
+      theme = 'light';
+    }
+    
+    document.documentElement.setAttribute('data-theme', theme);
+  })();
+</script>
+
+<nav class="navbar navbar-expand-lg custom-nav border-bottom py-3">
   <div class="container">
     <a class="navbar-brand font-weight-bold text-primary" href="/" style="letter-spacing: -0.5px;">
       <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" class="bi bi-check2-square mr-2 mt-n1" viewBox="0 0 16 16">
         <path d="M3 14.5A1.5 1.5 0 0 1 1.5 13V3A1.5 1.5 0 0 1 3 1.5h8a.5.5 0 0 1 0 1H3a.5.5 0 0 0-.5.5v10a.5.5 0 0 0 .5.5h10a.5.5 0 0 0 .5-.5V8a.5.5 0 0 1 1 0v5a1.5 1.5 0 0 1-1.5 1.5H3z"/>
         <path d="m8.354 10.354 7-7a.5.5 0 0 0-.708-.708L8 9.293 5.354 6.646a.5.5 0 1 0-.708.708l3 3a.5.5 0 0 0 .708 0z"/>
       </svg>
-      Todo App <span class="text-muted font-weight-light">ORDB</span>
+      Todo App <span class="custom-text-muted font-weight-light">ORDB</span>
     </a>
     
     <button class="navbar-toggler border-0" type="button" data-toggle="collapse" data-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
-      <span class="navbar-toggler-icon"></span>
+      <i class="fas fa-bars" style="color: var(--text-main);"></i>
     </button>
     
     <div class="collapse navbar-collapse" id="navbarNav">
@@ -28,13 +52,52 @@
           <li class="nav-item">
             <a class="nav-link px-3 font-weight-600" href="/dashboard">Dashboard</a>
           </li>
+
+          <li class="nav-item dropdown custom-theme-dropdown">
+            <a class="nav-link px-3 font-weight-600 dropdown-toggle" href="#" id="themeMenu" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+              <i class="fas fa-palette mr-1"></i> Theme
+            </a>
+            <div class="dropdown-menu dropdown-menu-right shadow-sm border-0" aria-labelledby="themeMenu">
+              <button class="dropdown-item py-2" onclick="changeTheme('light')">
+                <i class="fas fa-sun mr-2 text-warning"></i> Light Mode
+              </button>
+              <button class="dropdown-item py-2" onclick="changeTheme('dark')">
+                <i class="fas fa-moon mr-2 text-secondary"></i> Dark Mode
+              </button>
+              
+              <div class="dropdown-divider"></div>
+              
+              <button class="dropdown-item py-2" onclick="changeTheme('ocean')">
+                <i class="fas fa-water mr-2 text-info"></i> Ocean
+              </button>
+              <button class="dropdown-item py-2" onclick="changeTheme('midnight')">
+                <i class="fas fa-star mr-2 text-primary"></i> Midnight
+              </button>
+              <button class="dropdown-item py-2" onclick="changeTheme('cyberpunk')">
+                <i class="fas fa-microchip mr-2" style="color: #d946ef;"></i> Cyberpunk
+              </button>
+
+              <div class="dropdown-divider"></div>
+              
+              <button class="dropdown-item py-2" onclick="changeTheme('forest')">
+                <i class="fas fa-leaf mr-2 text-success"></i> Forest
+              </button>
+              <button class="dropdown-item py-2" onclick="changeTheme('sunset')">
+                <i class="fas fa-fire mr-2 text-danger"></i> Sunset
+              </button>
+              <button class="dropdown-item py-2" onclick="changeTheme('coffee')">
+                <i class="fas fa-coffee mr-2" style="color: #8b5a2b;"></i> Coffee
+              </button>
+            </div>
+          </li>
+
           <li class="nav-item mx-lg-2">
             <a class="btn btn-primary-modern btn-modern px-4" href="/write">
               + New Task
             </a>
           </li>
           <li class="nav-item">
-            <a class="nav-link px-3 font-weight-600 text-danger" href="/logout">Logout</a>
+            <a class="nav-link px-3 font-weight-600 text-danger" href="/logout" onclick="clearTheme(event)">Logout</a>
           </li>
         <% } else { %>
           <li class="nav-item">
@@ -48,3 +111,199 @@
     </div>
   </div>
 </nav>
+
+<style>
+  /* 1. DEFINE VARIABLES SO NAVBAR ALWAYS KNOWS ITS COLORS */
+  :root {
+    --nav-bg: #ffffff;
+    --border-color: #dee2e6;
+    --text-main: #333333;
+    --text-muted-custom: #6c757d;
+    --dropdown-hover: #f8f9fa;
+    /* Button & Highlight Colors */
+    --btn-primary-bg: #0078d4;
+    --btn-primary-text: #ffffff;
+    --nav-danger-text: #dc3545;
+  }
+
+  [data-theme='dark'] {
+    --nav-bg: #1e1e1e;
+    --border-color: #333333;
+    --text-main: #e0e0e0;
+    --text-muted-custom: #a0a0a0;
+    --dropdown-hover: #2d2d2d;
+    --btn-primary-bg: #2563eb;
+    --btn-primary-text: #ffffff;
+    --nav-danger-text: #ff6b6b;
+  }
+
+  /* 🌊 OCEAN THEME */
+  [data-theme='ocean'] {
+    --nav-bg: #e0f2fe;
+    --border-color: #bae6fd;
+    --text-main: #0c4a6e;
+    --text-muted-custom: #0284c7;
+    --dropdown-hover: #f0f9ff;
+    --btn-primary-bg: #0284c7; 
+    --btn-primary-text: #ffffff;
+    --nav-danger-text: #e11d48;
+  }
+
+  /* 🌌 MIDNIGHT THEME */
+  [data-theme='midnight'] {
+    --nav-bg: #0f172a;
+    --border-color: #334155;
+    --text-main: #f8fafc;
+    --text-muted-custom: #94a3b8;
+    --dropdown-hover: #1e293b;
+    --btn-primary-bg: #8b5cf6; 
+    --btn-primary-text: #ffffff;
+    --nav-danger-text: #f43f5e;
+  }
+
+  /* 🌲 FOREST THEME */
+  [data-theme='forest'] {
+    --nav-bg: #f0fdf4;
+    --border-color: #bbf7d0;
+    --text-main: #14532d;
+    --text-muted-custom: #16a34a;
+    --dropdown-hover: #dcfce7;
+    --btn-primary-bg: #15803d; 
+    --btn-primary-text: #ffffff;
+    --nav-danger-text: #dc2626;
+  }
+
+  /* 🌅 SUNSET THEME */
+  [data-theme='sunset'] {
+    --nav-bg: #fff1f2;
+    --border-color: #fecdd3;
+    --text-main: #881337;
+    --text-muted-custom: #e11d48;
+    --dropdown-hover: #ffe4e6;
+    --btn-primary-bg: #f43f5e; 
+    --btn-primary-text: #ffffff;
+    --nav-danger-text: #9f1239;
+  }
+
+  /* 🤖 CYBERPUNK THEME */
+  [data-theme='cyberpunk'] {
+    --nav-bg: #09090b;
+    --border-color: #27272a;
+    --text-main: #fdf5ff;
+    --text-muted-custom: #a1a1aa;
+    --dropdown-hover: #18181b;
+    --btn-primary-bg: #d946ef; 
+    --btn-primary-text: #ffffff;
+    --nav-danger-text: #06b6d4; 
+  }
+
+  /* ☕ COFFEE THEME */
+  [data-theme='coffee'] {
+    --nav-bg: #fdf8f6;
+    --border-color: #e7d5c9;
+    --text-main: #4a3b32;
+    --text-muted-custom: #8a6d5b;
+    --dropdown-hover: #f5ebe6;
+    --btn-primary-bg: #8b5a2b; 
+    --btn-primary-text: #ffffff;
+    --nav-danger-text: #b91c1c; 
+  }
+
+  /* 2. APPLY TO NAVBAR ELEMENTS */
+  .custom-nav {
+    background-color: var(--nav-bg);
+    border-color: var(--border-color) !important;
+    transition: background-color 0.3s ease;
+  }
+
+  .custom-nav .nav-link {
+    color: var(--text-main) !important;
+    transition: color 0.3s ease;
+  }
+
+  .custom-nav .nav-link:hover {
+    color: var(--btn-primary-bg) !important;
+  }
+
+  /* Explicitly fix the Logout button so it stays red, but adapts to dark mode */
+  .custom-nav .nav-link.text-danger {
+    color: var(--nav-danger-text) !important;
+  }
+
+  /* Explicitly fix the Primary buttons (+ New Task) to use theme variables */
+  .custom-nav .btn-primary-modern {
+    background-color: var(--btn-primary-bg);
+    border-color: var(--btn-primary-bg);
+    color: var(--btn-primary-text) !important;
+  }
+
+  .custom-nav .btn-outline-primary {
+    color: var(--btn-primary-bg);
+    border-color: var(--btn-primary-bg);
+  }
+  
+  .custom-nav .btn-outline-primary:hover {
+    background-color: var(--btn-primary-bg);
+    color: var(--btn-primary-text) !important;
+  }
+
+  .custom-text-muted {
+    color: var(--text-muted-custom) !important;
+  }
+
+  /* Dropdown Styling */
+  .custom-nav .dropdown-menu {
+    background-color: var(--nav-bg);
+    border: 1px solid var(--border-color) !important;
+  }
+
+  .custom-nav .dropdown-item {
+    color: var(--text-main);
+    cursor: pointer;
+  }
+
+  .custom-nav .dropdown-item:hover {
+    background-color: var(--dropdown-hover);
+    color: var(--text-main);
+  }
+
+  /* CSS Hover Trick: Forces dropdown to open without clicking if JS fails */
+  @media (min-width: 992px) {
+    .custom-theme-dropdown:hover .dropdown-menu {
+      display: block;
+      margin-top: 0;
+    }
+  }
+</style>
+
+<script>
+  async function changeTheme(theme) {
+    // 1. Immediately update UI
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('user-theme', theme);
+
+    // 2. Save preference to the Database
+    try {
+      const res = await fetch('/api/settings/theme', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ theme })
+      });
+      if (!res.ok) console.warn('Failed to sync theme with DB');
+    } catch (err) {
+      console.error('Network error saving theme:', err);
+    }
+  }
+
+  // FIXED: Stop the link, clear storage, then redirect manually
+  function clearTheme(e) {
+    e.preventDefault(); // Stop the immediate navigation
+    
+    // Clear everything
+    localStorage.removeItem('user-theme');
+    document.documentElement.setAttribute('data-theme', 'light');
+    
+    // Manually send them to the logout route
+    window.location.href = '/logout';
+  }
+</script>
