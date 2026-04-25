@@ -9,11 +9,158 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <title>Edit Work Item - Todo App</title>
+  
   <style>
-    body { background-color: #f4f7f9; font-family: 'Inter', sans-serif; }
-    .custom-card { border: 1px solid #dfe1e5; border-radius: 4px; }
-    .subtask-item { background: #f8f9fa; border: 1px solid #e9ecef; border-radius: 4px; margin-bottom: 5px; padding: 8px 12px; display: flex; align-items: center; justify-content: space-between; }
+    /* 1. PAGE THEME VARIABLES */
+    :root {
+        --bg-body: #f4f7f9;
+        --bg-card: #ffffff;
+        --text-main: #1a1a1b;
+        --border-color: #dfe1e5;
+        --subtask-bg: #f8f9fa;
+        --btn-primary-bg: #0078d4;
+        --btn-primary-text: #ffffff;
+    }
+
+    [data-theme='dark'] {
+        --bg-body: #121212;
+        --bg-card: #1e1e1e;
+        --text-main: #e0e0e0;
+        --border-color: #333333;
+        --subtask-bg: #2d2d2d;
+        --btn-primary-bg: #2563eb;
+        --btn-primary-text: #ffffff;
+    }
+
+    [data-theme='ocean'] {
+        --bg-body: #f0f9ff;
+        --bg-card: #ffffff;
+        --text-main: #0c4a6e;
+        --border-color: #bae6fd;
+        --subtask-bg: #e0f2fe;
+        --btn-primary-bg: #0284c7;
+        --btn-primary-text: #ffffff;
+    }
+
+    [data-theme='midnight'] {
+        --bg-body: #0f172a;
+        --bg-card: #1e293b;
+        --text-main: #f8fafc;
+        --border-color: #334155;
+        --subtask-bg: #0f172a;
+        --btn-primary-bg: #8b5cf6;
+        --btn-primary-text: #ffffff;
+    }
+
+    [data-theme='forest'] {
+        --bg-body: #f0fdf4;
+        --bg-card: #ffffff;
+        --text-main: #14532d;
+        --border-color: #bbf7d0;
+        --subtask-bg: #dcfce7;
+        --btn-primary-bg: #15803d;
+        --btn-primary-text: #ffffff;
+    }
+
+    [data-theme='sunset'] {
+        --bg-body: #fff1f2;
+        --bg-card: #ffffff;
+        --text-main: #881337;
+        --border-color: #fecdd3;
+        --subtask-bg: #ffe4e6;
+        --btn-primary-bg: #f43f5e;
+        --btn-primary-text: #ffffff;
+    }
+
+    [data-theme='cyberpunk'] {
+        --bg-body: #09090b;
+        --bg-card: #18181b;
+        --text-main: #fdf5ff;
+        --border-color: #27272a;
+        --subtask-bg: #27272a;
+        --btn-primary-bg: #d946ef;
+        --btn-primary-text: #ffffff;
+    }
+
+    [data-theme='coffee'] {
+        --bg-body: #fdf8f6;
+        --bg-card: #ffffff;
+        --text-main: #4a3b32;
+        --border-color: #e7d5c9;
+        --subtask-bg: #f5ebe6;
+        --btn-primary-bg: #8b5a2b;
+        --btn-primary-text: #ffffff;
+    }
+
+    /* 2. APPLYING VARIABLES TO THE PAGE */
+    body { 
+        background-color: var(--bg-body); 
+        color: var(--text-main);
+        font-family: 'Inter', sans-serif; 
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+
+    .custom-card { 
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color); 
+        border-radius: 8px;
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    
+    .subtask-item { 
+        background: var(--subtask-bg); 
+        border: 1px solid var(--border-color); 
+        border-radius: 6px; 
+        margin-bottom: 5px; 
+        padding: 8px 12px; 
+        display: flex; 
+        align-items: center; 
+        justify-content: space-between; 
+        transition: background-color 0.3s ease;
+    }
+
+    /* 3. FORM CONTROL THEME OVERRIDES */
+    .form-control {
+        background-color: var(--bg-body) !important;
+        color: var(--text-main) !important;
+        border: 1px solid var(--border-color);
+    }
+
+    .form-control:focus {
+        border-color: var(--btn-primary-bg, #0078d4);
+        box-shadow: 0 0 0 0.2rem rgba(128, 128, 128, 0.1);
+    }
+
+    /* Keep subtask inputs blending into their background */
+    .subtask-item .form-control {
+        background-color: transparent !important;
+        border: none !important;
+    }
+
+    /* Buttons */
+    .btn-primary-custom {
+        background-color: var(--btn-primary-bg, #0078d4);
+        border-color: var(--btn-primary-bg, #0078d4);
+        color: var(--btn-primary-text, #ffffff) !important;
+    }
+    .btn-primary-custom:hover { filter: brightness(0.9); }
+
+    .btn-outline-primary-custom {
+        color: var(--btn-primary-bg);
+        border-color: var(--btn-primary-bg);
+    }
+    .btn-outline-primary-custom:hover {
+        background-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text) !important;
+    }
   </style>
+
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('user-theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
 </head>
 
 <body>
@@ -22,11 +169,11 @@
   <div class="container py-5">
     <div class="row justify-content-center">
       <div class="col-md-8">
-        <h4 class="mb-4"><strong>Edit Work Item #<%= data._id.toString().slice(-5) %></strong></h4>
+        <h4 class="mb-4 font-weight-bold">Edit Work Item #<%= data._id.toString().slice(-5) %></h4>
 
-        <div class="card custom-card">
-          <div class="card-body">
-            <form action="/edit?_method=PUT" method="POST">
+        <div class="card custom-card shadow-sm">
+          <div class="card-body p-4">
+            <form action="/edit?_method=PUT" method="POST" id="edit-task-form">
               <input value="<%= data._id %>" name="id" type="hidden">
 
               <div class="form-group">
@@ -34,7 +181,7 @@
                 <input type="text" class="form-control" name="title" value="<%= data.title %>" required />
               </div>
 
-              <div class="row">
+              <div class="row mt-3">
                 <div class="col-md-4">
                   <div class="form-group">
                     <label class="font-weight-600">Status</label>
@@ -72,9 +219,9 @@
                     <input type="datetime-local" class="form-control" name="date" value="<%= flatDate %>" />
                   </div>
                 </div>
-                            </div>
+              </div>
 
-              <div class="form-group">
+              <div class="form-group mt-3">
                 <label class="font-weight-600">Tags (comma separated)</label>
                 <input
                   type="text"
@@ -85,7 +232,7 @@
                 />
               </div>
 
-              <hr>
+              <hr class="my-4" style="border-color: var(--border-color);">
 
               <div class="form-group">
                 <label class="font-weight-600">Subtasks (Child Items)</label>
@@ -94,22 +241,22 @@
                     <% data.subtasks.forEach((sub, index) => { %>
                       <div class="subtask-item">
                         <div class="d-flex align-items-center flex-grow-1">
-                          <input type="checkbox" name="subtasks[<%= index %>][completed]" value="true" <%= sub.completed ? 'checked' : '' %> class="mr-2">
-                          <input type="text" name="subtasks[<%= index %>][title]" value="<%= sub.title %>" class="form-control form-control-sm border-0 bg-transparent">
+                          <input type="checkbox" <%= sub.completed ? 'checked' : '' %> class="mr-3 subtask-cb">
+                          <input type="text" value="<%= sub.title %>" class="form-control form-control-sm subtask-title">
                         </div>
                         <button type="button" class="btn btn-sm text-danger remove-subtask"><i class="fas fa-times"></i></button>
                       </div>
                     <% }) %>
                   <% } %>
                 </div>
-                <button type="button" id="add-subtask-btn" class="btn btn-sm btn-outline-primary mt-2">
+                <button type="button" id="add-subtask-btn" class="btn btn-sm btn-outline-primary-custom mt-2">
                   <i class="fas fa-plus mr-1"></i> Add Subtask
                 </button>
               </div>
 
-              <div class="mt-4 pt-3 border-top">
-                <button type="submit" class="btn btn-primary" style="background-color: #0078d4; border: none;">Save Changes</button>
-                <a href="/list" class="btn btn-link text-muted">Cancel</a>
+              <div class="mt-4 pt-3 border-top" style="border-color: var(--border-color) !important;">
+                <button type="submit" class="btn btn-primary-custom px-4 font-weight-600">Save Changes</button>
+                <a href="/list" class="btn btn-link text-muted ml-2">Cancel</a>
               </div>
             </form>
           </div>
@@ -119,27 +266,46 @@
   </div>
 
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
-  <script>
-    // FIXED: Using EJS to set the initial index from the server data
-    let subtaskIndex = <%= data.subtasks ? data.subtasks.length : 0 %>;
-
+<script>
+    // Simply append raw HTML without worrying about index numbers
     $('#add-subtask-btn').click(function() {
       const html = `
         <div class="subtask-item">
           <div class="d-flex align-items-center flex-grow-1">
-            <input type="hidden" name="subtasks[${subtaskIndex}][completed]" value="false">
-            <input type="checkbox" name="subtasks[${subtaskIndex}][completed]" value="true" class="mr-2">
-            <input type="text" name="subtasks[${subtaskIndex}][title]" placeholder="New subtask..." class="form-control form-control-sm" required>
+            <input type="checkbox" class="mr-3 subtask-cb">
+            <input type="text" placeholder="New subtask..." class="form-control form-control-sm subtask-title" required>
           </div>
           <button type="button" class="btn btn-sm text-danger remove-subtask"><i class="fas fa-times"></i></button>
         </div>
       `;
       $('#subtask-container').append(html);
-      subtaskIndex++;
     });
 
     $(document).on('click', '.remove-subtask', function() {
       $(this).closest('.subtask-item').remove();
+    });
+
+    // THE MAGIC FIX: Intercept form submit to perfectly structure the data
+    $('#edit-task-form').on('submit', function(e) {
+        
+        $('.subtask-item').each(function(index) {
+            const checkbox = $(this).find('.subtask-cb');
+            const titleInput = $(this).find('.subtask-title');
+            
+            // 1. Re-index everything sequentially using standard string concatenation
+            checkbox.attr('name', 'subtasks[' + index + '][completed]');
+            titleInput.attr('name', 'subtasks[' + index + '][title]');
+            
+            // 2. Guarantee the checkbox sends 'true' or 'false'
+            if (!checkbox.is(':checked')) {
+                // If it's unchecked, HTML forms ignore it. 
+                // So we force it to check, but change the value to "false" right before it sends!
+                checkbox.prop('checked', true).val('false');
+            } else {
+                checkbox.val('true');
+            }
+        });
+        
     });
   </script>
 </body>

@@ -111,6 +111,12 @@ export const db = {
     return dbAdapter.updateOne(...args);
   },
 
+  // ─── ADDED THIS METHOD ───
+  updateUserTheme: async (...args) => {
+    await ensureConnected();
+    return dbAdapter.updateUserTheme(...args);
+  },
+
   deleteOne: async (...args) => {
     await ensureConnected();
     return dbAdapter.deleteOne(...args);
