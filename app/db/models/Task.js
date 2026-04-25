@@ -27,6 +27,10 @@ const taskSchema = new mongoose.Schema(
       default: 3, 
     },
     subtasks: [subtaskSchema],
+    tags: {
+  type: [String],
+  default: []
+},
     ownerId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'user',
