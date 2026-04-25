@@ -64,20 +64,30 @@ export function createRouter(db) {
     router.get('/dashboard', (_req, res) => res.render('dashboard.ejs'));
 
     router.get('/list', async (req, res) => {
-    try {
-        const { tag } = req.query;
+  try {
+    const { tag } = req.query;
 
-        const filter = { ownerId: req.user._id };
-        if (tag) filter.tags = tag;
+    const allUserTasks = await db.findAll(
+      COLLECTION,
+      { ownerId: req.user._id },
+      { sort: { createdAt: 1 } }
+    );
 
-        const tasks = await db.findAll(COLLECTION, filter, { sort: { createdAt: 1 } });
-        const allTags = [...new Set(tasks.flatMap(t => t.tags || []))].sort();
+    const allTags = [...new Set(allUserTasks.flatMap(t => t.tags || []))].sort();
 
-        res.render('list.ejs', { posts: tasks, allTags, selectedTag: tag || '' });
-    } catch (err) {
-        console.error('Error fetching tasks:', err);
-        res.status(500).send('Failed to fetch tasks');
-    }
+    const posts = tag
+      ? await db.findAll(
+          COLLECTION,
+          { ownerId: req.user._id, tags: tag },
+          { sort: { createdAt: 1 } }
+        )
+      : allUserTasks;
+
+    res.render('list.ejs', { posts, allTags, selectedTag: tag || '' });
+  } catch (err) {
+    console.error('Error fetching tasks:', err);
+    res.status(500).send('Failed to fetch tasks');
+  }
 });
 
     router.get('/listjson', async (req, res) => {
