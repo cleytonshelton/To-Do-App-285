@@ -13,7 +13,7 @@ const COLLECTION = 'tasks';
 /**
  * Normalizes a task payload from a request body.
  */
-function parseTaskBody(body = {}, requireTitle = false) {
+export function parseTaskBody(body = {}, requireTitle = false) {
   const { title, date, status, priority, subtasks } = body;
 
   if (requireTitle && !title?.trim()) {
@@ -35,11 +35,12 @@ function parseTaskBody(body = {}, requireTitle = false) {
 /**
  * Creates and configures the API router.
  */
-export function createApiRouter(db) {
+export function createApiRouter(db, deps = {}) {
   const router = express.Router();
+  const requireAuthMiddleware = deps.requireAuthMiddleware || requireAuth;
 
   // Apply requireAuth to ALL API routes below
-  router.use(requireAuth);
+  router.use(requireAuthMiddleware);
 
   // ─── Tasks: Create ─────────────────────────────────────────────────────────
 

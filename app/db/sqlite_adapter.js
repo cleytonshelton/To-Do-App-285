@@ -13,7 +13,7 @@ const { Database } = sqlite3.verbose();
 // ── Helpers ────────────────────────────────────────────────────────────────────
 
 /** Builds a WHERE clause and its bound values from a filter object. */
-function buildWhere(filter = {}) {
+export function buildWhere(filter = {}) {
   const entries = Object.entries(filter);
   if (entries.length === 0) return { clause: '', values: [] };
   const clause = 'WHERE ' + entries.map(([k]) => `${k} = ?`).join(' AND ');
@@ -22,12 +22,12 @@ function buildWhere(filter = {}) {
 }
 
 /** Serializes a value for SQLite storage (JSON-encodes objects/arrays). */
-function serialize(value) {
+export function serialize(value) {
   return typeof value === 'object' && value !== null ? JSON.stringify(value) : value;
 }
 
 /** Deserializes a row returned from SQLite, parsing any JSON columns. */
-function deserializeRow(row) {
+export function deserializeRow(row) {
   if (!row) return null;
   const result = { ...row };
   for (const [key, value] of Object.entries(result)) {

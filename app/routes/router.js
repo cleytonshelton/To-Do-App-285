@@ -4,7 +4,7 @@ import authController from '../db/controllers/authController.js';
 
 const COLLECTION = 'tasks';
 
-function parseSubtasks(subtasks, withCompleted = false) {
+export function parseSubtasks(subtasks, withCompleted = false) {
     if (!subtasks) return [];
     return Object.values(subtasks).map(sub =>
         withCompleted
@@ -12,7 +12,7 @@ function parseSubtasks(subtasks, withCompleted = false) {
             : sub
     );
 }
-function normalizeTags(tagsInput) {
+export function normalizeTags(tagsInput) {
   if (!tagsInput) return [];
   const raw = Array.isArray(tagsInput) ? tagsInput.join(',') : String(tagsInput);
 
@@ -33,11 +33,14 @@ function normalizeTags(tagsInput) {
   }
   return unique;
 }
-export function createRouter(db) {
+export function createRouter(db, deps = {}) {
+    const requireAuthMiddleware = deps.requireAuthMiddleware || requireAuth;
+    const checkUserMiddleware = deps.checkUserMiddleware || checkUser;
+    const authHandlers = deps.authController || authController;
     const router = express.Router();
 
     // 1. Set user context for all routes (navbar user status)
-    router.use(checkUser);
+    router.use(checkUserMiddleware);
 
     // ─── Public Routes ────────────────────────────────────────────────────────
     
@@ -45,19 +48,19 @@ export function createRouter(db) {
 
     // Login Routes
     router.get('/login', (req, res) => res.render('login.ejs'));
-    router.post('/login', authController.login_post);
+    router.post('/login', authHandlers.login_post);
 
     // Signup Routes
     router.get('/signup', (req, res) => res.render('signup.ejs'));
-    router.post('/signup', authController.signup_post);
+    router.post('/signup', authHandlers.signup_post);
 
     // Logout
-    router.get('/logout', authController.logout_get);
+    router.get('/logout', authHandlers.logout_get);
 
     // ─── Protected Routes (Redirects to /login if not authed) ───────────────────
     
     // Everything below this line is "locked"
-    router.use(requireAuth);
+    router.use(requireAuthMiddleware);
 
     router.get('/write', (_req, res) => res.render('write.ejs'));
     router.get('/calendar', (_req, res) => res.render('calendar.ejs'));
