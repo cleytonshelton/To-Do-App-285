@@ -85,6 +85,10 @@ export class ORDB {
     throw new Error('disconnect() must be implemented by subclass');
   }
 
+  async updateUserTheme(userId, theme) {
+    throw new Error('updateUserTheme() must be implemented by subclass');
+  }
+
   /**
    * Get the database type name
    * @returns {string} The database type (e.g., 'MongoDB', 'SQLite')

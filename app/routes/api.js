@@ -1,20 +1,21 @@
 /**
- * API Routes - Express Router for Task CRUD Operations
+ * API Routes - Express Router for Task and User Operations
  *
- * Handles all task-related API endpoints.
+ * Handles all task-related and user-setting API endpoints.
  * Works with any database through the ORDB abstraction layer.
  */
 
 import express from 'express';
 import { requireAuth } from '../db/middleware/authMiddleware.js'; // Import your middleware
 import { createTaskWithRewards, updateTaskWithRewards } from '../util/rewards.js';
+import { requireAuth } from '../db/middleware/authMiddleware.js';
 
 const COLLECTION = 'tasks';
 
 /**
  * Normalizes a task payload from a request body.
  */
-function parseTaskBody(body = {}, requireTitle = false) {
+export function parseTaskBody(body = {}, requireTitle = false) {
   const { title, date, status, priority, subtasks } = body;
 
   if (requireTitle && !title?.trim()) {
@@ -24,11 +25,11 @@ function parseTaskBody(body = {}, requireTitle = false) {
   return {
     error: null,
     data: {
-      ...(title    !== undefined && { title }),
-      ...(date     !== undefined && { date: date || null }),
-      ...(status   !== undefined && { status: status?.trim() || 'Pending' }),
-      ...(priority !== undefined && { priority: parseInt(priority) }),
-      ...(subtasks !== undefined && { subtasks: Array.isArray(subtasks) ? subtasks : [] }),
+      ...(title     !== undefined && { title }),
+      ...(date      !== undefined && { date: date || null }),
+      ...(status    !== undefined && { status: status?.trim() || 'Pending' }),
+      ...(priority  !== undefined && { priority: parseInt(priority) }),
+      ...(subtasks  !== undefined && { subtasks: Array.isArray(subtasks) ? subtasks : [] }),
     },
   };
 }
@@ -36,13 +37,14 @@ function parseTaskBody(body = {}, requireTitle = false) {
 /**
  * Creates and configures the API router.
  */
-export function createApiRouter(db) {
+export function createApiRouter(db, deps = {}) {
   const router = express.Router();
+  const requireAuthMiddleware = deps.requireAuthMiddleware || requireAuth;
 
   // Apply requireAuth to ALL API routes below
-  router.use(requireAuth);
+  router.use(requireAuthMiddleware);
 
-  // ─── Create ───────────────────────────────────────────────────────────────
+  // ─── Tasks: Create ─────────────────────────────────────────────────────────
 
   router.post('/tasks', async (req, res) => {
     const { data, error } = parseTaskBody(req.body, true);
@@ -55,6 +57,9 @@ export function createApiRouter(db) {
         status:   data.status   ?? 'Pending',
         priority: data.priority ?? 3,
         subtasks: data.subtasks ?? [],
+      const task = await db.insertOne(COLLECTION, {
+        ...data,
+        ownerId: req.user._id, 
       });
       res.status(201).json(task);
     } catch (err) {
@@ -63,11 +68,10 @@ export function createApiRouter(db) {
     }
   });
 
-  // ─── Read ─────────────────────────────────────────────────────────────────
+  // ─── Tasks: Read ───────────────────────────────────────────────────────────
 
   router.get('/tasks', async (req, res) => {
     try {
-      // Filter by ownerId
       const tasks = await db.findAll(
         COLLECTION, 
         { ownerId: req.user._id }, 
@@ -82,7 +86,6 @@ export function createApiRouter(db) {
 
   router.get('/tasks/:id', async (req, res) => {
     try {
-      // Ensure the task belongs to the user
       const task = await db.findOne(COLLECTION, { _id: req.params.id, ownerId: req.user._id });
       if (!task) return res.status(404).json({ error: 'Task not found' });
       res.json(task);
@@ -92,18 +95,20 @@ export function createApiRouter(db) {
     }
   });
 
-  // ─── Update ───────────────────────────────────────────────────────────────
+  // ─── Tasks: Update ─────────────────────────────────────────────────────────
 
   router.put('/tasks/:id', async (req, res) => {
     const { data, error } = parseTaskBody(req.body);
     if (error) return res.status(400).json({ error });
-    if (Object.keys(data).length === 0) {
-      return res.status(400).json({ error: 'No fields to update' });
-    }
 
     try {
       // Double check ownership during update
       const task = await updateTaskWithRewards(db, req.params.id, req.user._id, data);
+      const task = await db.updateOne(
+        COLLECTION, 
+        { _id: req.params.id, ownerId: req.user._id }, 
+        data
+      );
       if (!task) return res.status(404).json({ error: 'Task not found' });
       res.json(task);
     } catch (err) {
@@ -119,7 +124,7 @@ export function createApiRouter(db) {
     try {
       const task = await db.updateOne(
         COLLECTION,
-        { _id: id, ownerId: req.user._id }, // Secure filter
+        { _id: id, ownerId: req.user._id },
         { [`subtasks.${index}.completed`]: completed }
       );
       if (!task) return res.status(404).json({ error: 'Task not found' });
@@ -130,17 +135,49 @@ export function createApiRouter(db) {
     }
   });
 
-  // ─── Delete ───────────────────────────────────────────────────────────────
+  // ─── Tasks: Delete ─────────────────────────────────────────────────────────
 
   router.delete('/tasks/:id', async (req, res) => {
     try {
-      // Only delete if ID and owner match
       const deleted = await db.deleteOne(COLLECTION, { _id: req.params.id, ownerId: req.user._id });
       if (!deleted) return res.status(404).json({ error: 'Task not found' });
       res.json({ ok: true, deletedId: req.params.id });
     } catch (err) {
       console.error('Error deleting task:', err);
       res.status(500).json({ error: 'Failed to delete task' });
+    }
+  });
+
+  // ─── User Settings: Theme ──────────────────────────────────────────────────
+
+  /**
+   * Updates the UI theme for the currently logged-in user.
+   * Expects { "theme": "dark" | "light" | "system" }
+   */
+// ─── User Settings: Theme ──────────────────────────────────────────────────
+
+  router.put('/settings/theme', async (req, res) => {
+    const { theme } = req.body;
+
+    // ADDED all the new themes to the allowed list
+    const allowedThemes = ['light', 'dark', 'system', 'ocean', 'midnight', 'forest', 'sunset', 'cyberpunk', 'coffee'];
+
+    if (!allowedThemes.includes(theme)) {
+      return res.status(400).json({ error: 'Invalid theme choice' });
+    }
+
+    try {
+      const user = await db.updateUserTheme(req.user._id, theme);
+      
+      if (!user) return res.status(404).json({ error: 'User not found' });
+
+      res.json({ 
+        success: true, 
+        theme: user.preferences?.theme || theme 
+      });
+    } catch (err) {
+      console.error('Error updating user theme:', err);
+      res.status(500).json({ error: 'Failed to save theme preference' });
     }
   });
 

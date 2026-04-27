@@ -10,14 +10,175 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
   <title>Create Work Item - Todo App</title>
+  
   <style>
-    body { background-color: #f4f7f9; font-family: 'Inter', sans-serif; }
-    .custom-card { border: 1px solid #dfe1e5; border-radius: 4px; box-shadow: 0 2px 4px rgba(0,0,0,0.05); background: white; }
-    .subtask-item { background: #fff; border: 1px solid #e9ecef; border-radius: 4px; margin-bottom: 8px; padding: 10px; display: flex; align-items: center; gap: 10px; transition: border-color 0.2s; }
-    .subtask-item:focus-within { border-color: #0078d4; }
-    .label-heading { font-weight: 600; color: #5e6c84; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; }
-    .form-control:focus { border-color: #0078d4; box-shadow: none; }
+    /* 1. PAGE THEME VARIABLES */
+    :root {
+        --bg-body: #f4f7f9;
+        --bg-card: #ffffff;
+        --text-main: #1a1a1b;
+        --text-muted: #6c757d;
+        --border-color: #dfe1e5;
+        --subtask-bg: #f8f9fa;
+        --btn-primary-bg: #0078d4;
+        --btn-primary-text: #ffffff;
+    }
+
+    [data-theme='dark'] {
+        --bg-body: #121212;
+        --bg-card: #1e1e1e;
+        --text-main: #e0e0e0;
+        --text-muted: #a0a0a0;
+        --border-color: #333333;
+        --subtask-bg: #2d2d2d;
+        --btn-primary-bg: #2563eb;
+        --btn-primary-text: #ffffff;
+    }
+
+    [data-theme='ocean'] {
+        --bg-body: #f0f9ff;
+        --bg-card: #ffffff;
+        --text-main: #0c4a6e;
+        --text-muted: #0284c7;
+        --border-color: #bae6fd;
+        --subtask-bg: #e0f2fe;
+        --btn-primary-bg: #0284c7;
+        --btn-primary-text: #ffffff;
+    }
+
+    [data-theme='midnight'] {
+        --bg-body: #0f172a;
+        --bg-card: #1e293b;
+        --text-main: #f8fafc;
+        --text-muted: #94a3b8;
+        --border-color: #334155;
+        --subtask-bg: #0f172a;
+        --btn-primary-bg: #8b5cf6;
+        --btn-primary-text: #ffffff;
+    }
+
+    [data-theme='forest'] {
+        --bg-body: #f0fdf4;
+        --bg-card: #ffffff;
+        --text-main: #14532d;
+        --text-muted: #16a34a;
+        --border-color: #bbf7d0;
+        --subtask-bg: #dcfce7;
+        --btn-primary-bg: #15803d;
+        --btn-primary-text: #ffffff;
+    }
+
+    [data-theme='sunset'] {
+        --bg-body: #fff1f2;
+        --bg-card: #ffffff;
+        --text-main: #881337;
+        --text-muted: #e11d48;
+        --border-color: #fecdd3;
+        --subtask-bg: #ffe4e6;
+        --btn-primary-bg: #f43f5e;
+        --btn-primary-text: #ffffff;
+    }
+
+    [data-theme='cyberpunk'] {
+        --bg-body: #09090b;
+        --bg-card: #18181b;
+        --text-main: #fdf5ff;
+        --text-muted: #a1a1aa;
+        --border-color: #27272a;
+        --subtask-bg: #27272a;
+        --btn-primary-bg: #d946ef;
+        --btn-primary-text: #ffffff;
+    }
+
+    [data-theme='coffee'] {
+        --bg-body: #fdf8f6;
+        --bg-card: #ffffff;
+        --text-main: #4a3b32;
+        --text-muted: #8a6d5b;
+        --border-color: #e7d5c9;
+        --subtask-bg: #f5ebe6;
+        --btn-primary-bg: #8b5a2b;
+        --btn-primary-text: #ffffff;
+    }
+
+    /* 2. APPLYING VARIABLES */
+    body { 
+        background-color: var(--bg-body); 
+        color: var(--text-main);
+        font-family: 'Inter', sans-serif; 
+        transition: background-color 0.3s ease, color 0.3s ease;
+    }
+    
+    .custom-card { 
+        background-color: var(--bg-card);
+        border: 1px solid var(--border-color); 
+        border-radius: 8px; 
+        box-shadow: 0 2px 4px rgba(0,0,0,0.05); 
+        transition: background-color 0.3s ease, border-color 0.3s ease;
+    }
+    
+    .subtask-item { 
+        background: var(--subtask-bg); 
+        border: 1px solid var(--border-color); 
+        border-radius: 6px; 
+        margin-bottom: 8px; 
+        padding: 10px; 
+        display: flex; 
+        align-items: center; 
+        gap: 10px; 
+        transition: border-color 0.2s, background-color 0.3s ease; 
+    }
+    .subtask-item:focus-within { border-color: var(--btn-primary-bg); }
+    
+    .label-heading { 
+        font-weight: 600; 
+        color: var(--text-muted); 
+        font-size: 0.85rem; 
+        text-transform: uppercase; 
+        letter-spacing: 0.5px; 
+    }
+
+    /* Form Controls Theme Overrides */
+    .form-control {
+        background-color: var(--bg-body) !important;
+        color: var(--text-main) !important;
+        border: 1px solid var(--border-color);
+    }
+    .form-control:focus { 
+        border-color: var(--btn-primary-bg); 
+        box-shadow: 0 0 0 0.2rem rgba(128, 128, 128, 0.1); 
+    }
+    
+    /* Keep subtask inputs blending into their background */
+    .subtask-item .form-control {
+        background-color: transparent !important;
+        border: none !important;
+    }
+
+    /* Buttons */
+    .btn-primary-custom {
+        background-color: var(--btn-primary-bg);
+        border-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text) !important;
+    }
+    .btn-primary-custom:hover { filter: brightness(0.9); }
+
+    .btn-outline-primary-custom {
+        color: var(--btn-primary-bg);
+        border-color: var(--btn-primary-bg);
+    }
+    .btn-outline-primary-custom:hover {
+        background-color: var(--btn-primary-bg);
+        color: var(--btn-primary-text) !important;
+    }
   </style>
+
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('user-theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
 </head>
 
 <body>
@@ -28,8 +189,8 @@
       <div class="col-md-10 col-lg-8">
         
         <div class="d-flex align-items-center mb-4">
-            <a href="/list" class="text-muted mr-3"><i class="fas fa-arrow-left"></i></a>
-            <h4 class="m-0"><strong>Create New Work Item</strong></h4>
+            <a href="/list" class="mr-3" style="color: var(--text-muted);"><i class="fas fa-arrow-left"></i></a>
+            <h4 class="m-0 font-weight-bold">Create New Work Item</h4>
         </div>
 
         <div class="card custom-card">
@@ -79,22 +240,27 @@
                 </div>
               </div>
 
-              <hr class="my-4">
+              <div class="form-group mb-4">
+                <label class="label-heading">Tags (comma separated)</label>
+                <input type="text" class="form-control" name="tags" placeholder="School, Work, Personal" />
+              </div>
+
+              <hr class="my-4" style="border-color: var(--border-color);">
 
               <div class="form-group">
                 <label class="label-heading mb-3">Subtasks (Child Items)</label>
                 <div id="subtask-list">
                     </div>
-                <button type="button" id="add-subtask" class="btn btn-sm btn-outline-primary mt-2">
+                <button type="button" id="add-subtask" class="btn btn-sm btn-outline-primary-custom mt-2">
                   <i class="fas fa-plus mr-1"></i> Add Child Item
                 </button>
               </div>
 
-              <div class="mt-5 border-top pt-4 d-flex align-items-center">
-                <button type="submit" class="btn btn-primary px-5 shadow-sm" style="background-color: #0078d4; border: none; font-weight: 600;">
+              <div class="mt-5 border-top pt-4 d-flex align-items-center" style="border-color: var(--border-color) !important;">
+                <button type="submit" class="btn btn-primary-custom px-5 shadow-sm font-weight-600">
                   Create Item
                 </button>
-                <a href="/list" class="btn btn-link text-muted ml-2">Cancel</a>
+                <a href="/list" class="btn btn-link ml-2" style="color: var(--text-muted);">Cancel</a>
               </div>
             </form>
           </div>
@@ -120,7 +286,7 @@
       const row = `
         <div class="subtask-item animate__animated animate__fadeInUp">
           <input type="hidden" name="subtasks[${subCount}][completed]" value="false"> 
-          <i class="far fa-circle text-muted" style="font-size: 0.8rem;"></i>
+          <i class="far fa-circle" style="font-size: 0.8rem; color: var(--text-muted);"></i>
           <input type="text" name="subtasks[${subCount}][title]" placeholder="Describe child task..." class="form-control form-control-sm border-0" required>
           <button type="button" class="btn btn-link text-danger remove-subtask p-0"><i class="fas fa-times"></i></button>
         </div>`;

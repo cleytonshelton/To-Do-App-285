@@ -29,7 +29,7 @@ function renderCalendar() {
     "July", "August", "September", "October", "November", "December"
   ];
 
-  // Header Logic
+  // ─── HEADER LOGIC ─────────────────────────────────────────────────────────
   const header = document.createElement("div");
   header.className = "calendar-header";
   header.innerHTML = `
@@ -51,6 +51,7 @@ function renderCalendar() {
     renderCalendar();
   });
 
+  // ─── GRID SETUP ───────────────────────────────────────────────────────────
   const grid = document.createElement("div");
   grid.className = "calendar-grid";
 
@@ -62,49 +63,74 @@ function renderCalendar() {
     grid.appendChild(h);
   });
 
+  // Empty days at the start of the month
   for (let i = 0; i < firstDay; i++) {
     const empty = document.createElement("div");
     empty.className = "day empty";
     grid.appendChild(empty);
   }
 
+  // ─── OPTIMIZATION: Pre-group tasks by day ───────────────────────────────
+  // This prevents looping through the entire tasks array 31 separate times.
+  const tasksThisMonth = {};
+  
+  tasks.forEach(task => {
+    if (!task.date) return;
+    const taskDate = new Date(task.date);
+    
+    if (
+      !isNaN(taskDate) && 
+      taskDate.getFullYear() === year && 
+      taskDate.getMonth() === month
+    ) {
+      const day = taskDate.getDate();
+      if (!tasksThisMonth[day]) tasksThisMonth[day] = [];
+      tasksThisMonth[day].push(task);
+    }
+  });
+
+  // ─── RENDER DAYS ──────────────────────────────────────────────────────────
   for (let day = 1; day <= daysInMonth; day++) {
     const cell = document.createElement("div");
     cell.className = "day";
 
+    // Highlight today
     if (day === today.getDate() && month === today.getMonth() && year === today.getFullYear()) {
       cell.classList.add("today");
     }
 
     cell.innerHTML = `<strong>${day}</strong>`;
 
-    tasks.forEach(task => {
-      const taskDate = new Date(task.date);
-      if (
-        !isNaN(taskDate) &&
-        taskDate.getFullYear() === year &&
-        taskDate.getMonth() === month &&
-        taskDate.getDate() === day
-      ) {
-        const t = document.createElement("div");
-        const statusClass = (task.status || "Pending").toLowerCase().replace(" ", "-");
-        const priorityClass = `prio-${task.priority || 3}`;
+    // Fetch tasks for this specific day from our optimized object
+    const dayTasks = tasksThisMonth[day] || [];
 
-        t.className = `task status-${statusClass} ${priorityClass}`;
-        let prefix = (task.status === "Completed") ? '<i class="fas fa-check mr-1"></i>' : '<i class="fas fa-circle mr-1" style="font-size: 0.4rem; vertical-align: middle;"></i>';
+    dayTasks.forEach(task => {
+      const t = document.createElement("div");
+      
+      // Use regex (/\s+/g) to replace ALL spaces, not just the first one 
+      // (Fixes issues with "In Progress" becoming "in-progress" correctly)
+      const statusClass = (task.status || "Pending").toLowerCase().replace(/\s+/g, "-");
+      const priorityClass = `prio-${task.priority || 3}`;
 
-        t.innerHTML = `${prefix} ${task.title}`;
+      t.className = `task status-${statusClass} ${priorityClass}`;
+      
+      let prefix = (task.status === "Completed") 
+        ? '<i class="fas fa-check mr-1"></i>' 
+        : '<i class="fas fa-circle mr-1" style="font-size: 0.4rem; vertical-align: middle;"></i>';
 
-        // Navigate to detail on click
-        t.onclick = () => window.location.href = `/detail/${task._id}`;
+      t.innerHTML = `${prefix} ${task.title}`;
 
-        cell.appendChild(t);
-      }
+      // Navigate to detail on click
+      t.onclick = () => window.location.href = `/detail/${task._id}`;
+
+      cell.appendChild(t);
     });
 
     grid.appendChild(cell);
   }
+  
   calendarEl.appendChild(grid);
 }
 
+// Initialize the calendar on load
 loadTasks();

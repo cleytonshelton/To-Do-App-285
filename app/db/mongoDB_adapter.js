@@ -29,7 +29,6 @@ function wrapUpdate(update) {
   return Object.keys(update)[0].startsWith('$') ? update : { $set: update };
 }
 
-// ── Adapter ────────────────────────────────────────────────────────────────────
 
 export class MongooseAdapter extends ORDB {
   constructor(uri, databaseName) {
@@ -55,7 +54,7 @@ export class MongooseAdapter extends ORDB {
 
   async findAll(collection, filter = {}, options = {}) {
     let query = getModel(collection).find(filter);
-    if (options.sort)  query = query.sort(options.sort);
+    if (options.sort) query = query.sort(options.sort);
     if (options.limit) query = query.limit(options.limit);
     return query.lean();
   }
@@ -74,6 +73,14 @@ export class MongooseAdapter extends ORDB {
       filter,
       wrapUpdate(update),
       { new: true, lean: true, runValidators: true }
+    );
+  }
+
+  async updateUserTheme(userId, theme) {
+    return this.updateOne(
+      'users', 
+      { _id: userId }, 
+      { 'preferences.theme': theme }
     );
   }
 

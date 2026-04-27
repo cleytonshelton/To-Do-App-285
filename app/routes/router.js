@@ -13,6 +13,7 @@ const rewardItems = [
 ];
 
 function parseSubtasks(subtasks, withCompleted = false) {
+export function parseSubtasks(subtasks, withCompleted = false) {
     if (!subtasks) return [];
     return Object.values(subtasks).map(sub =>
         withCompleted
@@ -20,12 +21,35 @@ function parseSubtasks(subtasks, withCompleted = false) {
             : sub
     );
 }
+export function normalizeTags(tagsInput) {
+  if (!tagsInput) return [];
+  const raw = Array.isArray(tagsInput) ? tagsInput.join(',') : String(tagsInput);
 
-export function createRouter(db) {
+  const cleaned = raw
+    .split(',')
+    .map(t => t.trim())
+    .filter(Boolean)
+    .map(t => t.slice(0, 30));
+
+  const seen = new Set();
+  const unique = [];
+  for (const tag of cleaned) {
+    const key = tag.toLowerCase();
+    if (!seen.has(key)) {
+      seen.add(key);
+      unique.push(tag);
+    }
+  }
+  return unique;
+}
+export function createRouter(db, deps = {}) {
+    const requireAuthMiddleware = deps.requireAuthMiddleware || requireAuth;
+    const checkUserMiddleware = deps.checkUserMiddleware || checkUser;
+    const authHandlers = deps.authController || authController;
     const router = express.Router();
 
     // 1. Set user context for all routes (navbar user status)
-    router.use(checkUser);
+    router.use(checkUserMiddleware);
 
     // ─── Public Routes ────────────────────────────────────────────────────────
     
@@ -33,19 +57,19 @@ export function createRouter(db) {
 
     // Login Routes
     router.get('/login', (req, res) => res.render('login.ejs'));
-    router.post('/login', authController.login_post);
+    router.post('/login', authHandlers.login_post);
 
     // Signup Routes
     router.get('/signup', (req, res) => res.render('signup.ejs'));
-    router.post('/signup', authController.signup_post);
+    router.post('/signup', authHandlers.signup_post);
 
     // Logout
-    router.get('/logout', authController.logout_get);
+    router.get('/logout', authHandlers.logout_get);
 
     // ─── Protected Routes (Redirects to /login if not authed) ───────────────────
     
     // Everything below this line is "locked"
-    router.use(requireAuth);
+    router.use(requireAuthMiddleware);
 
     router.get('/write', (_req, res) => res.render('write.ejs'));
     router.get('/calendar', (_req, res) => res.render('calendar.ejs'));
@@ -64,6 +88,31 @@ export function createRouter(db) {
             res.status(500).send('Failed to fetch tasks');
         }
     });
+  try {
+    const { tag } = req.query;
+
+    const allUserTasks = await db.findAll(
+      COLLECTION,
+      { ownerId: req.user._id },
+      { sort: { createdAt: 1 } }
+    );
+
+    const allTags = [...new Set(allUserTasks.flatMap(t => t.tags || []))].sort();
+
+    const posts = tag
+      ? await db.findAll(
+          COLLECTION,
+          { ownerId: req.user._id, tags: tag },
+          { sort: { createdAt: 1 } }
+        )
+      : allUserTasks;
+
+    res.render('list.ejs', { posts, allTags, selectedTag: tag || '' });
+  } catch (err) {
+    console.error('Error fetching tasks:', err);
+    res.status(500).send('Failed to fetch tasks');
+  }
+});
 
     router.get('/listjson', async (req, res) => {
         try {
@@ -101,6 +150,24 @@ export function createRouter(db) {
             res.status(500).send('Failed to add task');
         }
     });
+    try {
+        const { title, date, status, priority, subtasks, tags } = req.body;
+        const tagsArr = normalizeTags(tags);
+
+        await db.insertOne(COLLECTION, {
+            title: title || '',
+            date: date || null,
+            status: status || 'Pending',
+            priority: parseInt(priority) || 3,
+            subtasks: parseSubtasks(subtasks),
+            tags: tagsArr,
+            ownerId: req.user._id, 
+        });
+        res.redirect('/list');
+    } catch (err) {
+        res.status(500).send('Failed to add task');
+    }
+});
 
     router.get('/edit/:id', async (req, res) => {
         try {
@@ -113,15 +180,16 @@ export function createRouter(db) {
     });
 
     router.put('/edit', async (req, res) => {
-        try {
-            const { id, title, date, status, priority, subtasks } = req.body;
-            const updateData = {
-                ...(title !== undefined && { title }),
-                ...(date !== undefined && { date }),
-                ...(status !== undefined && { status }),
-                ...(priority !== undefined && { priority: parseInt(priority) }),
-                ...(subtasks !== undefined && { subtasks: parseSubtasks(subtasks, true) }),
-            };
+    try {
+        const { id, title, date, status, priority, subtasks, tags } = req.body;
+        const updateData = {
+            ...(title !== undefined && { title }),
+            ...(date !== undefined && { date }),
+            ...(status !== undefined && { status }),
+            ...(priority !== undefined && { priority: parseInt(priority) }),
+            ...(subtasks !== undefined && { subtasks: parseSubtasks(subtasks, true) }),
+            ...(tags !== undefined && { tags: normalizeTags(tags) }),
+        };
 
             const updated = await updateTaskWithRewards(db, id, req.user._id, updateData);
             if (!updated) return res.status(403).send('Unauthorized');
