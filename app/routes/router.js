@@ -12,7 +12,6 @@ const rewardItems = [
   { name: 'Badge Reward', cost: 200, description: 'Earn a special achievement badge.' },
 ];
 
-function parseSubtasks(subtasks, withCompleted = false) {
 export function parseSubtasks(subtasks, withCompleted = false) {
     if (!subtasks) return [];
     return Object.values(subtasks).map(sub =>
@@ -77,42 +76,33 @@ export function createRouter(db, deps = {}) {
 
     router.get('/list', async (req, res) => {
         try {
-            const tasks = await db.findAll(COLLECTION, { ownerId: req.user._id }, { sort: { createdAt: 1 } });
-            const posts = tasks.map(task => ({
-                ...task,
-                pointsToEarn: calculateTaskPoints(task),
-            }));
-            res.render('list.ejs', { posts });
+            const { tag } = req.query;
+
+            const allUserTasks = await db.findAll(
+                COLLECTION,
+                { ownerId: req.user._id },
+                { sort: { createdAt: 1 } }
+            );
+
+            const allTags = [...new Set(allUserTasks.flatMap(t => t.tags || []))].sort();
+
+            const posts = tag
+                ? await db.findAll(
+                    COLLECTION,
+                    { ownerId: req.user._id, tags: tag },
+                    { sort: { createdAt: 1 } }
+                )
+                : allUserTasks.map(task => ({
+                    ...task,
+                    pointsToEarn: calculateTaskPoints(task),
+                }));
+
+            res.render('list.ejs', { posts, allTags, selectedTag: tag || '' });
         } catch (err) {
             console.error('Error fetching tasks:', err);
             res.status(500).send('Failed to fetch tasks');
         }
     });
-  try {
-    const { tag } = req.query;
-
-    const allUserTasks = await db.findAll(
-      COLLECTION,
-      { ownerId: req.user._id },
-      { sort: { createdAt: 1 } }
-    );
-
-    const allTags = [...new Set(allUserTasks.flatMap(t => t.tags || []))].sort();
-
-    const posts = tag
-      ? await db.findAll(
-          COLLECTION,
-          { ownerId: req.user._id, tags: tag },
-          { sort: { createdAt: 1 } }
-        )
-      : allUserTasks;
-
-    res.render('list.ejs', { posts, allTags, selectedTag: tag || '' });
-  } catch (err) {
-    console.error('Error fetching tasks:', err);
-    res.status(500).send('Failed to fetch tasks');
-  }
-});
 
     router.get('/listjson', async (req, res) => {
         try {
@@ -136,13 +126,16 @@ export function createRouter(db, deps = {}) {
 
     router.post('/add', async (req, res) => {
         try {
-            const { title, date, status, priority, subtasks } = req.body;
+            const { title, date, status, priority, subtasks, tags } = req.body;
+            const tagsArr = normalizeTags(tags);
+
             await createTaskWithRewards(db, req.user._id, {
                 title: title || '',
                 date: date || null,
                 status: status || 'Pending',
                 priority: parseInt(priority) || 3,
                 subtasks: parseSubtasks(subtasks),
+                tags: tagsArr,
             });
             res.redirect('/list');
         } catch (err) {
@@ -150,24 +143,6 @@ export function createRouter(db, deps = {}) {
             res.status(500).send('Failed to add task');
         }
     });
-    try {
-        const { title, date, status, priority, subtasks, tags } = req.body;
-        const tagsArr = normalizeTags(tags);
-
-        await db.insertOne(COLLECTION, {
-            title: title || '',
-            date: date || null,
-            status: status || 'Pending',
-            priority: parseInt(priority) || 3,
-            subtasks: parseSubtasks(subtasks),
-            tags: tagsArr,
-            ownerId: req.user._id, 
-        });
-        res.redirect('/list');
-    } catch (err) {
-        res.status(500).send('Failed to add task');
-    }
-});
 
     router.get('/edit/:id', async (req, res) => {
         try {

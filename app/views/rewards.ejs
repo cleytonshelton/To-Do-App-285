@@ -4,15 +4,91 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no" />
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css" />
+  <link rel="stylesheet" href="/css/style.css">
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <title>Rewards</title>
+  <script>
+    (function() {
+      const savedTheme = localStorage.getItem('user-theme') || 'light';
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    })();
+  </script>
   <style>
-    body { font-family: 'Inter', sans-serif; background: #f4f7f9; }
-    .hero { background: white; border-radius: 8px; padding: 2rem; margin-top: 2rem; border: 1px solid #e2e7ed; }
-    .reward-card { border: 1px solid #e2e7ed; border-radius: 8px; background: white; transition: transform 0.2s; }
+    :root {
+      --bg-body: #f4f7f9;
+      --bg-card: #ffffff;
+      --text-main: #1a1a1b;
+      --text-muted: #6c757d;
+      --border-color: #e2e7ed;
+      --btn-primary-bg: #0078d4;
+    }
+    [data-theme='dark'] {
+      --bg-body: #121212;
+      --bg-card: #1e1e1e;
+      --text-main: #e0e0e0;
+      --text-muted: #a0a0a0;
+      --border-color: #333333;
+      --btn-primary-bg: #2563eb;
+    }
+    [data-theme='ocean'] {
+      --bg-body: #f0f9ff;
+      --bg-card: #ffffff;
+      --text-main: #0c4a6e;
+      --text-muted: #0284c7;
+      --border-color: #bae6fd;
+      --btn-primary-bg: #0284c7;
+    }
+    [data-theme='midnight'] {
+      --bg-body: #0f172a;
+      --bg-card: #1e293b;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --border-color: #334155;
+      --btn-primary-bg: #8b5cf6;
+    }
+    [data-theme='forest'] {
+      --bg-body: #f0fdf4;
+      --bg-card: #ffffff;
+      --text-main: #14532d;
+      --text-muted: #16a34a;
+      --border-color: #bbf7d0;
+      --btn-primary-bg: #15803d;
+    }
+    [data-theme='sunset'] {
+      --bg-body: #fff1f2;
+      --bg-card: #ffffff;
+      --text-main: #881337;
+      --text-muted: #e11d48;
+      --border-color: #fecdd3;
+      --btn-primary-bg: #f43f5e;
+    }
+    [data-theme='cyberpunk'] {
+      --bg-body: #09090b;
+      --bg-card: #18181b;
+      --text-main: #fdf5ff;
+      --text-muted: #a1a1aa;
+      --border-color: #27272a;
+      --btn-primary-bg: #d946ef;
+    }
+    [data-theme='coffee'] {
+      --bg-body: #fdf8f6;
+      --bg-card: #ffffff;
+      --text-main: #4a3b32;
+      --text-muted: #8a6d5b;
+      --border-color: #e7d5c9;
+      --btn-primary-bg: #8b5a2b;
+    }
+
+    body { font-family: 'Inter', sans-serif; background: var(--bg-body); color: var(--text-main); transition: background-color 0.3s ease, color 0.3s ease; }
+    .hero { background: var(--bg-card); border-radius: 8px; padding: 2rem; margin-top: 2rem; border: 1px solid var(--border-color); }
+    .reward-card { border: 1px solid var(--border-color); border-radius: 8px; background: var(--bg-card); transition: transform 0.2s; }
     .reward-card:hover { transform: translateY(-2px); }
     .reward-cost { font-size: 1rem; font-weight: 700; color: #107c10; }
     .reward-item + .reward-item { margin-top: 1rem; }
+    .text-muted { color: var(--text-muted) !important; }
+    .card { background: var(--bg-card); border-color: var(--border-color); color: var(--text-main); }
+    .btn-primary { background-color: var(--btn-primary-bg); border-color: var(--btn-primary-bg); }
   </style>
 </head>
 <body>

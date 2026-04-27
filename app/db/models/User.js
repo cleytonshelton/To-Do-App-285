@@ -23,7 +23,7 @@ const userSchema = new mongoose.Schema({
         cost: { type: Number, required: true },
         redeemedAt: { type: Date, default: Date.now }
       }
-    ]
+    ],
     // --- ADDED THIS SECTION ---
     preferences: {
         theme: {
