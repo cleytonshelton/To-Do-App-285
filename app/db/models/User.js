@@ -13,6 +13,17 @@ const userSchema = new mongoose.Schema({
         required: [true, 'Please enter a password'],
         minlength: [6, 'Minimum password length is 6 characters']
     },
+    points: {
+        type: Number,
+        default: 0,
+    },
+    rewardsHistory: [
+      {
+        item: { type: String, required: true },
+        cost: { type: Number, required: true },
+        redeemedAt: { type: Date, default: Date.now }
+      }
+    ]
     // --- ADDED THIS SECTION ---
     preferences: {
         theme: {

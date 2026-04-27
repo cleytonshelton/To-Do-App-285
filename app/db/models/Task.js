@@ -27,6 +27,10 @@ const taskSchema = new mongoose.Schema(
       default: 3, 
     },
     subtasks: [subtaskSchema],
+    pointsEarned: {
+      type: Number,
+      default: 0,
+    },
     tags: {
   type: [String],
   default: []

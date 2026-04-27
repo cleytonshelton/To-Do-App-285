@@ -65,22 +65,49 @@ export class SQLiteAdapter extends ORDB {
       const sql = `
         PRAGMA foreign_keys = ON;
         CREATE TABLE IF NOT EXISTS tasks (
-          _id        INTEGER PRIMARY KEY AUTOINCREMENT,
-          title      TEXT    NOT NULL,
-          date       TEXT,
-          status     TEXT    DEFAULT 'Pending',
-          priority   INTEGER DEFAULT 3,
-          subtasks   TEXT    DEFAULT '[]',
-          createdAt  TEXT    DEFAULT (datetime('now'))
+          _id          INTEGER PRIMARY KEY AUTOINCREMENT,
+          title        TEXT    NOT NULL,
+          date         TEXT,
+          status       TEXT    DEFAULT 'Pending',
+          priority     INTEGER DEFAULT 3,
+          subtasks     TEXT    DEFAULT '[]',
+          pointsEarned INTEGER DEFAULT 0,
+          ownerId      TEXT,
+          createdAt    TEXT    DEFAULT (datetime('now'))
         );
       `;
+
       this.db.exec(sql, (err) => {
         if (err) {
           console.error('Failed to initialize database:', err.message);
           return reject(err);
         }
-        console.log('SQLite database initialized');
-        resolve();
+
+        // Ensure reward-related columns exist on older database files.
+        this.db.all(`PRAGMA table_info(tasks);`, (infoErr, columns) => {
+          if (infoErr) return reject(infoErr);
+
+          const existing = columns.map(col => col.name);
+          const migrations = [];
+
+          if (!existing.includes('pointsEarned')) {
+            migrations.push(`ALTER TABLE tasks ADD COLUMN pointsEarned INTEGER DEFAULT 0;`);
+          }
+          if (!existing.includes('ownerId')) {
+            migrations.push(`ALTER TABLE tasks ADD COLUMN ownerId TEXT;`);
+          }
+
+          if (migrations.length === 0) {
+            console.log('SQLite database initialized');
+            return resolve();
+          }
+
+          this.db.exec(migrations.join('\n'), (mErr) => {
+            if (mErr) return reject(mErr);
+            console.log('SQLite database migrated with reward columns');
+            resolve();
+          });
+        });
       });
     });
   }
