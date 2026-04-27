@@ -27,16 +27,18 @@
         </div>
         <div class="text-right">
           <div class="text-muted small">Your balance</div>
-          <div class="h5 font-weight-bold"><%= user?.points || 0 %> points</div>
+          <div id="rewardBalance" class="h5 font-weight-bold"><%= user?.points || 0 %> points</div>
         </div>
       </div>
 
-      <% if (message) { %>
-        <div class="alert alert-success mt-4"><%= message %></div>
-      <% } %>
-      <% if (error) { %>
-        <div class="alert alert-danger mt-4"><%= error %></div>
-      <% } %>
+      <div id="rewardsMessage">
+        <% if (message) { %>
+          <div class="alert alert-success mt-4"><%= message %></div>
+        <% } %>
+        <% if (error) { %>
+          <div class="alert alert-danger mt-4"><%= error %></div>
+        <% } %>
+      </div>
     </div>
 
     <div class="row mt-4">
@@ -50,12 +52,13 @@
               </div>
               <div class="reward-cost"><%= reward.cost %> pts</div>
             </div>
-            <form action="/rewards/redeem" method="POST">
-              <input type="hidden" name="item" value="<%= reward.name %>" />
-              <button type="submit" class="btn btn-primary btn-block" <%= (user?.points || 0) < reward.cost ? 'disabled' : '' %>>
-                Redeem
-              </button>
-            </form>
+            <button type="button"
+              class="btn btn-primary btn-block redeem-reward"
+              data-item="<%= reward.name %>"
+              data-cost="<%= reward.cost %>"
+              <%= (user?.points || 0) < reward.cost ? 'disabled' : '' %>>
+              Redeem
+            </button>
           </div>
         </div>
       <% }) %>
@@ -71,5 +74,50 @@
 
   <script src="https://code.jquery.com/jquery-3.4.1.min.js"></script>
   <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"></script>
+  <script>
+    const rewardBalance = document.getElementById('rewardBalance');
+    const rewardMessage = document.getElementById('rewardsMessage');
+
+    function setRewardMessage(html, type = 'success') {
+      rewardMessage.innerHTML = `<div class="alert alert-${type} mt-4">${html}</div>`;
+    }
+
+    function refreshRewardButtons(points) {
+      document.querySelectorAll('.redeem-reward').forEach(button => {
+        button.disabled = Number(button.dataset.cost) > points;
+      });
+    }
+
+    document.querySelectorAll('.redeem-reward').forEach(button => {
+      button.addEventListener('click', async () => {
+        const item = button.dataset.item;
+        button.disabled = true;
+        setRewardMessage('Processing redemption...', 'info');
+
+        try {
+          const response = await fetch('/rewards/redeem', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Accept': 'application/json',
+            },
+            body: JSON.stringify({ item }),
+          });
+
+          const data = await response.json();
+          if (!response.ok) {
+            throw new Error(data.error || 'Unable to redeem reward.');
+          }
+
+          rewardBalance.innerText = `${data.points} points`;
+          setRewardMessage(data.message || 'Reward redeemed successfully.', 'success');
+          refreshRewardButtons(data.points);
+        } catch (err) {
+          setRewardMessage(err.message || 'Reward redemption failed.', 'danger');
+          refreshRewardButtons(Number(rewardBalance.innerText.replace(/[^0-9]/g, '')) || 0);
+        }
+      });
+    });
+  </script>
 </body>
 </html>

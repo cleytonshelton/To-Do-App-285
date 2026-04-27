@@ -114,7 +114,12 @@
                     <% } %>
                     <span><i class="far fa-calendar-alt mr-1"></i> <%= post.date ? new Date(post.date).toLocaleDateString() : 'No date' %></span>
                   </div>
-                  <i class="fas fa-trash-alt delete-btn" data-id="<%= post._id %>"></i>
+                  <div class="d-flex align-items-center">
+                    <small class="text-secondary mr-3">
+                      <%= post.status === 'Completed' ? `${post.pointsEarned || post.pointsToEarn} pts earned` : `+${post.pointsToEarn} pts` %>
+                    </small>
+                    <i class="fas fa-trash-alt delete-btn" data-id="<%= post._id %>"></i>
+                  </div>
                 </div>
               </div>
             <% }) %>
@@ -147,8 +152,12 @@
             statusCode: {
               401: function() { window.location.href = '/login'; }
             }
-          }).done(() => { 
+          }).done((data) => { 
             updateCounts(); 
+            if (data?.points !== undefined) {
+              const navPoints = document.getElementById('navTaskPoints');
+              if (navPoints) navPoints.innerText = `+${data.points} pts`;
+            }
           }).fail((err) => {
             if(err.status !== 401) alert("Failed to update status.");
           });

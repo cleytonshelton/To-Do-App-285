@@ -1,7 +1,8 @@
 import express from 'express';
 import { requireAuth, checkUser } from '../db/middleware/authMiddleware.js';
 import authController from '../db/controllers/authController.js';
-import { createTaskWithRewards, updateTaskWithRewards, redeemReward } from '../util/rewards.js';
+import User from '../db/models/User.js';
+import { createTaskWithRewards, updateTaskWithRewards, redeemReward, calculateTaskPoints } from '../util/rewards.js';
 
 const COLLECTION = 'tasks';
 
@@ -53,7 +54,11 @@ export function createRouter(db) {
     router.get('/list', async (req, res) => {
         try {
             const tasks = await db.findAll(COLLECTION, { ownerId: req.user._id }, { sort: { createdAt: 1 } });
-            res.render('list.ejs', { posts: tasks });
+            const posts = tasks.map(task => ({
+                ...task,
+                pointsToEarn: calculateTaskPoints(task),
+            }));
+            res.render('list.ejs', { posts });
         } catch (err) {
             console.error('Error fetching tasks:', err);
             res.status(500).send('Failed to fetch tasks');
@@ -73,6 +78,7 @@ export function createRouter(db) {
         try {
             const data = await db.findOne(COLLECTION, { _id: req.params.id, ownerId: req.user._id });
             if (!data) return res.status(404).send('Task not found');
+            data.pointsToEarn = calculateTaskPoints(data);
             res.render('detail.ejs', { data });
         } catch (err) {
             res.status(500).send('Error fetching task detail');
@@ -120,8 +126,9 @@ export function createRouter(db) {
             const updated = await updateTaskWithRewards(db, id, req.user._id, updateData);
             if (!updated) return res.status(403).send('Unauthorized');
 
+            const currentUser = await User.findById(req.user._id);
             const isAjax = req.xhr || req.headers.accept?.includes('json');
-            return isAjax ? res.json({ ok: true }) : res.redirect('/list');
+            return isAjax ? res.json({ ok: true, points: currentUser.points ?? 0 }) : res.redirect('/list');
         } catch (err) {
             console.error('Failed to update task:', err);
             res.status(500).send('Failed to update task');
@@ -159,14 +166,27 @@ export function createRouter(db) {
             const { item } = req.body;
             const reward = rewardItems.find(r => r.name === item);
             if (!reward) {
+                if (req.headers.accept?.includes('application/json')) {
+                    return res.status(400).json({ error: 'Invalid reward selected.' });
+                }
                 return res.redirect('/rewards?error=' + encodeURIComponent('Invalid reward selected.'));
             }
 
-            await redeemReward(req.user._id, reward.name, reward.cost);
-            res.redirect('/rewards?success=' + encodeURIComponent(`Redeemed ${reward.name} for ${reward.cost} points!`));
+            const updatedUser = await redeemReward(req.user._id, reward.name, reward.cost);
+            const successMessage = `Redeemed ${reward.name} for ${reward.cost} points!`;
+
+            if (req.headers.accept?.includes('application/json')) {
+                return res.json({ success: true, message: successMessage, points: updatedUser.points });
+            }
+
+            res.redirect('/rewards?success=' + encodeURIComponent(successMessage));
         } catch (err) {
             console.error('Reward redemption failed:', err);
-            res.redirect('/rewards?error=' + encodeURIComponent(err.message || 'Unable to redeem reward.'));
+            const errorMessage = err.message || 'Unable to redeem reward.';
+            if (req.headers.accept?.includes('application/json')) {
+                return res.status(500).json({ error: errorMessage });
+            }
+            res.redirect('/rewards?error=' + encodeURIComponent(errorMessage));
         }
     });
 

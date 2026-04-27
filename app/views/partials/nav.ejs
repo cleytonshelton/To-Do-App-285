@@ -19,14 +19,14 @@
         </li>
 
         <% if (user) { %>
-          <li class="nav-item">
-            <a class="nav-link px-3 font-weight-600" href="/list">My Tasks</a>
+          <li class="nav-item d-flex align-items-center">
+            <a class="nav-link px-3 font-weight-600 d-flex align-items-center" href="/list">
+              My Tasks
+              <span id="navTaskPoints" class="badge badge-success ml-2" style="font-size: 0.8rem;">+<%= user.points || 0 %> pts</span>
+            </a>
           </li>
           <li class="nav-item">
             <a class="nav-link px-3 font-weight-600" href="/calendar">Calendar</a>
-          </li>
-          <li class="nav-item d-flex align-items-center">
-            <span class="nav-link px-3 font-weight-600 text-success">Points: <strong><%= user.points || 0 %></strong></span>
           </li>
           <li class="nav-item">
             <a class="nav-link px-3 font-weight-600" href="/dashboard">Dashboard</a>
